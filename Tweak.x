@@ -1,188 +1,227 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
-#import <mach/mach.h>
+#import <Foundation/Foundation.h>
 
-// ==========================================
-// COMPONENT 1: VẼ VÒNG TRÒN DÀNH CHO CPU & RAM
-// ==========================================
-@interface HUDCircleView : UIView
-@property (nonatomic, strong) CAShapeLayer *bgLayer;
-@property (nonatomic, strong) CAShapeLayer *progressLayer;
-@property (nonatomic, strong) UILabel *titleLabel;
-@property (nonatomic, strong) UILabel *valueLabel;
-@end
+// =====================================================
+// KÉT SẮT LƯU TRỮ (FULL 4 CHỨC NĂNG)
+// =====================================================
+static CGFloat go_scale = 3.0;
+static BOOL go_thermalBypass = NO;
+static BOOL go_antiMemKill = NO;
+static BOOL go_backgroundAFK = NO;
 
-@implementation HUDCircleView
-- (instancetype)initWithFrame:(CGRect)frame title:(NSString *)title {
-    self = [super initWithFrame:frame];
-    if (self) {
-        CGFloat radius = frame.size.width / 2.0 - 5;
-        CGPoint center = CGPointMake(frame.size.width / 2.0, frame.size.width / 2.0);
-        UIBezierPath *circlePath = [UIBezierPath bezierPathWithArcCenter:center radius:radius startAngle:-M_PI_2 endAngle:M_PI_2 * 3 clockwise:YES];
-
-        self.bgLayer = [CAShapeLayer layer];
-        self.bgLayer.path = circlePath.CGPath;
-        self.bgLayer.fillColor = [UIColor clearColor].CGColor;
-        self.bgLayer.strokeColor = [UIColor colorWithWhite:0.3 alpha:1.0].CGColor;
-        self.bgLayer.lineWidth = 4.0;
-        [self.layer addSublayer:self.bgLayer];
-
-        self.progressLayer = [CAShapeLayer layer];
-        self.progressLayer.path = circlePath.CGPath;
-        self.progressLayer.fillColor = [UIColor clearColor].CGColor;
-        self.progressLayer.strokeColor = [UIColor greenColor].CGColor;
-        self.progressLayer.lineWidth = 4.0;
-        self.progressLayer.strokeEnd = 0.0; 
-        self.progressLayer.lineCap = kCALineCapRound;
-        [self.layer addSublayer:self.progressLayer];
-
-        self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, frame.size.width)];
-        self.titleLabel.text = title;
-        self.titleLabel.textColor = [UIColor whiteColor];
-        self.titleLabel.font = [UIFont boldSystemFontOfSize:11];
-        self.titleLabel.textAlignment = NSTextAlignmentCenter;
-        [self addSubview:self.titleLabel];
-
-        self.valueLabel = [[UILabel alloc] initWithFrame:CGRectMake(-10, frame.size.width + 2, frame.size.width + 20, 20)];
-        self.valueLabel.textColor = [UIColor whiteColor];
-        self.valueLabel.font = [UIFont boldSystemFontOfSize:11];
-        self.valueLabel.textAlignment = NSTextAlignmentCenter;
-        [self addSubview:self.valueLabel];
+static void LoadSettings() {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults objectForKey:@"GO_Scale"]) {
+        go_scale = [defaults floatForKey:@"GO_Scale"];
+    } else {
+        go_scale = [UIScreen mainScreen].scale;
     }
-    return self;
+    go_thermalBypass = [defaults boolForKey:@"GO_ThermalBypass"];
+    go_antiMemKill = [defaults boolForKey:@"GO_AntiMemKill"];
+    go_backgroundAFK = [defaults boolForKey:@"GO_BackgroundAFK"];
 }
 
-- (void)updateWithProgress:(CGFloat)progress valueText:(NSString *)text {
-    if (progress > 1.0) progress = 1.0;
-    if (progress < 0.0) progress = 0.0;
-    self.progressLayer.strokeEnd = progress;
-    CGFloat hue = (1.0 - progress) * 0.33; 
-    UIColor *dynColor = [UIColor colorWithHue:hue saturation:1.0 brightness:1.0 alpha:1.0];
-    self.progressLayer.strokeColor = dynColor.CGColor;
-    self.valueLabel.text = text;
-}
+#define SAVE_FLOAT(key, val) [[NSUserDefaults standardUserDefaults] setFloat:val forKey:key]; [[NSUserDefaults standardUserDefaults] synchronize]
+#define SAVE_BOOL(key, val) [[NSUserDefaults standardUserDefaults] setBool:val forKey:key]; [[NSUserDefaults standardUserDefaults] synchronize]
+
+// =====================================================
+// GIAO DIỆN MENU (Nút Tên Lửa 🚀)
+// =====================================================
+@interface FullMenuWindow : UIWindow
+@property (nonatomic, strong) UIButton *floatingBtn;
+@property (nonatomic, strong) UIView *menuView;
+@property (nonatomic, strong) UILabel *scaleLabel;
 @end
 
-// ==========================================
-// COMPONENT 2: BẢNG ĐIỀU KHIỂN CHÍNH
-// ==========================================
-@interface PerformanceHUDWindow : UIWindow
-@property (nonatomic, strong) UILabel *fpsTitle;
-@property (nonatomic, strong) UILabel *fpsValue;
-@property (nonatomic, strong) HUDCircleView *cpuView;
-@property (nonatomic, strong) HUDCircleView *ramView;
-@property (nonatomic, strong) CADisplayLink *displayLink;
-@property (nonatomic, assign) NSTimeInterval lastTime;
-@property (nonatomic, assign) NSUInteger count;
-@end
-
-@implementation PerformanceHUDWindow
+@implementation FullMenuWindow
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        self.windowLevel = UIWindowLevelStatusBar + 100.0;
-        self.userInteractionEnabled = YES; 
-        self.backgroundColor = [UIColor colorWithWhite:0.1 alpha:0.85]; 
-        self.layer.cornerRadius = 15;
-        self.layer.masksToBounds = YES;
-
+        self.windowLevel = UIWindowLevelStatusBar + 200.0;
+        self.backgroundColor = [UIColor clearColor];
+        
+        self.floatingBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        self.floatingBtn.frame = CGRectMake(20, 100, 45, 45);
+        self.floatingBtn.backgroundColor = [UIColor colorWithWhite:0.1 alpha:0.8];
+        self.floatingBtn.layer.cornerRadius = 22.5;
+        self.floatingBtn.layer.borderWidth = 1.5;
+        self.floatingBtn.layer.borderColor = [UIColor greenColor].CGColor;
+        [self.floatingBtn setTitle:@"🚀" forState:UIControlStateNormal];
+        self.floatingBtn.titleLabel.font = [UIFont systemFontOfSize:20];
+        [self.floatingBtn addTarget:self action:@selector(toggleMenu) forControlEvents:UIControlEventTouchUpInside];
+        
         UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
-        [self addGestureRecognizer:pan];
-
-        self.fpsTitle = [[UILabel alloc] initWithFrame:CGRectMake(10, 15, 50, 15)];
-        self.fpsTitle.text = @"FPS";
-        self.fpsTitle.textColor = [UIColor lightGrayColor];
-        self.fpsTitle.font = [UIFont boldSystemFontOfSize:12];
-        self.fpsTitle.textAlignment = NSTextAlignmentCenter;
-        [self addSubview:self.fpsTitle];
-
-        self.fpsValue = [[UILabel alloc] initWithFrame:CGRectMake(10, 30, 50, 30)];
-        self.fpsValue.textColor = [UIColor greenColor];
-        self.fpsValue.font = [UIFont boldSystemFontOfSize:22];
-        self.fpsValue.textAlignment = NSTextAlignmentCenter;
-        [self addSubview:self.fpsValue];
-
-        self.cpuView = [[HUDCircleView alloc] initWithFrame:CGRectMake(70, 10, 40, 40) title:@"CPU"];
-        [self addSubview:self.cpuView];
-
-        self.ramView = [[HUDCircleView alloc] initWithFrame:CGRectMake(130, 10, 40, 40) title:@"RAM"];
-        [self addSubview:self.ramView];
-
-        self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(tick:)];
-        [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+        [self.floatingBtn addGestureRecognizer:pan];
+        [self addSubview:self.floatingBtn];
+        
+        self.menuView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 260, 320)];
+        self.menuView.center = self.center;
+        self.menuView.backgroundColor = [UIColor colorWithWhite:0.05 alpha:0.95];
+        self.menuView.layer.cornerRadius = 15;
+        self.menuView.layer.borderWidth = 1;
+        self.menuView.layer.borderColor = [UIColor darkGrayColor].CGColor;
+        self.menuView.hidden = YES;
+        [self addSubview:self.menuView];
+        
+        UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(0, 10, 260, 30)];
+        title.text = @"GAME OPTIMIZER MAX";
+        title.textColor = [UIColor greenColor];
+        title.font = [UIFont boldSystemFontOfSize:18];
+        title.textAlignment = NSTextAlignmentCenter;
+        [self.menuView addSubview:title];
+        
+        UIButton *closeBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        closeBtn.frame = CGRectMake(220, 10, 30, 30);
+        [closeBtn setTitle:@"X" forState:UIControlStateNormal];
+        [closeBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
+        closeBtn.titleLabel.font = [UIFont boldSystemFontOfSize:18];
+        [closeBtn addTarget:self action:@selector(toggleMenu) forControlEvents:UIControlEventTouchUpInside];
+        [self.menuView addSubview:closeBtn];
+        
+        UILabel *scTitle = [[UILabel alloc] initWithFrame:CGRectMake(15, 50, 150, 20)];
+        scTitle.text = @"Độ Phân Giải GPU";
+        scTitle.textColor = [UIColor whiteColor];
+        scTitle.font = [UIFont systemFontOfSize:13];
+        [self.menuView addSubview:scTitle];
+        
+        self.scaleLabel = [[UILabel alloc] initWithFrame:CGRectMake(180, 50, 60, 20)];
+        self.scaleLabel.text = [NSString stringWithFormat:@"%.1fx", go_scale];
+        self.scaleLabel.textColor = [UIColor orangeColor];
+        self.scaleLabel.font = [UIFont boldSystemFontOfSize:13];
+        self.scaleLabel.textAlignment = NSTextAlignmentRight;
+        [self.menuView addSubview:self.scaleLabel];
+        
+        UISlider *scaleSlider = [[UISlider alloc] initWithFrame:CGRectMake(15, 75, 230, 30)];
+        scaleSlider.minimumValue = 1.0;
+        scaleSlider.maximumValue = 3.0;
+        scaleSlider.value = go_scale;
+        [scaleSlider addTarget:self action:@selector(scaleChanged:) forControlEvents:UIControlEventValueChanged];
+        [self.menuView addSubview:scaleSlider];
+        
+        UILabel *scNote = [[UILabel alloc] initWithFrame:CGRectMake(15, 105, 230, 15)];
+        scNote.text = @"*Khởi động lại game để áp dụng";
+        scNote.textColor = [UIColor grayColor];
+        scNote.font = [UIFont systemFontOfSize:10];
+        [self.menuView addSubview:scNote];
+        
+        [self createSwitchWithY:135 title:@"Đóng Băng Cảm Biến Nhiệt" state:go_thermalBypass action:@selector(thermalChanged:)];
+        [self createSwitchWithY:185 title:@"Khiên Chống Văng RAM" state:go_antiMemKill action:@selector(memChanged:)];
+        [self createSwitchWithY:235 title:@"Chạy Ngầm Bất Tử (AFK)" state:go_backgroundAFK action:@selector(afkChanged:)];
+        
+        UILabel *warning = [[UILabel alloc] initWithFrame:CGRectMake(10, 285, 240, 30)];
+        warning.text = @"⚠️ Bật Đóng Băng Nhiệt bắt buộc xài sò lạnh!";
+        warning.textColor = [UIColor redColor];
+        warning.font = [UIFont boldSystemFontOfSize:10];
+        warning.textAlignment = NSTextAlignmentCenter;
+        warning.numberOfLines = 2;
+        [self.menuView addSubview:warning];
     }
     return self;
 }
 
-// --- HÀM XỬ LÝ KÉO THẢ (ĐÃ FIX LỖI GIẬT) ---
-- (void)handlePan:(UIPanGestureRecognizer *)recognizer {
-    CGPoint translation = [recognizer translationInView:self];
-    self.center = CGPointMake(self.center.x + translation.x, self.center.y + translation.y);
-    [recognizer setTranslation:CGPointZero inView:self];
-}
-
-- (void)tick:(CADisplayLink *)link {
-    if (self.lastTime == 0) {
-        self.lastTime = link.timestamp;
-        return;
-    }
-    self.count++;
-    NSTimeInterval delta = link.timestamp - self.lastTime;
+- (void)createSwitchWithY:(CGFloat)y title:(NSString*)title state:(BOOL)state action:(SEL)action {
+    UILabel *lbl = [[UILabel alloc] initWithFrame:CGRectMake(15, y + 5, 180, 20)];
+    lbl.text = title;
+    lbl.textColor = [UIColor whiteColor];
+    lbl.font = [UIFont boldSystemFontOfSize:13];
+    [self.menuView addSubview:lbl];
     
-    if (delta >= 1.0) {
-        // 1. UPDATE FPS
-        double fps = self.count / delta;
-        self.count = 0;
-        self.lastTime = link.timestamp;
-        self.fpsValue.text = [NSString stringWithFormat:@"%.0f", fps];
+    UISwitch *sw = [[UISwitch alloc] initWithFrame:CGRectMake(195, y, 50, 30)];
+    sw.on = state;
+    sw.onTintColor = [UIColor greenColor];
+    [sw addTarget:self action:action forControlEvents:UIControlEventValueChanged];
+    [self.menuView addSubview:sw];
+}
 
-        // 2. UPDATE RAM
-        struct mach_task_basic_info info;
-        mach_msg_type_number_t size = MACH_TASK_BASIC_INFO_COUNT;
-        kern_return_t kerr = task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info, &size);
-        double ramMB = (kerr == KERN_SUCCESS) ? (info.resident_size / 1024.0 / 1024.0) : 0;
-        CGFloat ramProgress = ramMB / 6144.0;
-        [self.ramView updateWithProgress:ramProgress valueText:[NSString stringWithFormat:@"%.0f MB", ramMB]];
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
+    if (!self.floatingBtn.hidden && CGRectContainsPoint(self.floatingBtn.frame, point)) return YES;
+    if (!self.menuView.hidden && CGRectContainsPoint(self.menuView.frame, point)) return YES;
+    return NO;
+}
 
-        // 3. UPDATE CPU
-        thread_array_t thread_list;
-        mach_msg_type_number_t thread_count;
-        thread_info_data_t thinfo;
-        mach_msg_type_number_t thread_info_count;
-        thread_basic_info_t basic_info_th;
-        
-        kerr = task_threads(mach_task_self(), &thread_list, &thread_count);
-        float total_cpu = 0;
-        
-        if (kerr == KERN_SUCCESS) {
-            for (int j = 0; j < thread_count; j++) {
-                thread_info_count = THREAD_INFO_MAX;
-                kerr = thread_info(thread_list[j], THREAD_BASIC_INFO, (thread_info_t)thinfo, &thread_info_count);
-                if (kerr == KERN_SUCCESS) {
-                    basic_info_th = (thread_basic_info_t)thinfo;
-                    if (!(basic_info_th->flags & TH_FLAGS_IDLE)) {
-                        total_cpu += basic_info_th->cpu_usage / (float)TH_USAGE_SCALE * 100.0;
-                    }
-                }
-            }
-            vm_deallocate(mach_task_self(), (vm_offset_t)thread_list, thread_count * sizeof(thread_t));
-        }
-        
-        // FIX: Lấy tổng chia cho số nhân CPU để về thang 100%
-        NSUInteger numCores = [[NSProcessInfo processInfo] activeProcessorCount];
-        float normalized_cpu = total_cpu / numCores;
-        if (normalized_cpu > 100.0) normalized_cpu = 100.0; // Khóa mỏ lỡ nó nhảy lên 101%
-        
-        CGFloat cpuProgress = normalized_cpu / 100.0; 
-        [self.cpuView updateWithProgress:cpuProgress valueText:[NSString stringWithFormat:@"%.0f%%", normalized_cpu]];
+- (void)toggleMenu {
+    self.menuView.hidden = !self.menuView.hidden;
+}
+
+static CGPoint startCenter;
+static CGPoint startTouch;
+- (void)handlePan:(UIPanGestureRecognizer *)recognizer {
+    if (recognizer.state == UIGestureRecognizerStateBegan) {
+        startCenter = self.floatingBtn.center;
+        startTouch = [recognizer locationInView:self];
+    } else if (recognizer.state == UIGestureRecognizerStateChanged) {
+        CGPoint currentTouch = [recognizer locationInView:self];
+        self.floatingBtn.center = CGPointMake(startCenter.x + (currentTouch.x - startTouch.x), startCenter.y + (currentTouch.y - startTouch.y));
     }
 }
+
+- (void)scaleChanged:(UISlider *)sender {
+    float val = round(sender.value * 2.0) / 2.0; 
+    sender.value = val;
+    self.scaleLabel.text = [NSString stringWithFormat:@"%.1fx", val];
+    go_scale = val;
+    SAVE_FLOAT(@"GO_Scale", val);
+}
+- (void)thermalChanged:(UISwitch *)sender { go_thermalBypass = sender.on; SAVE_BOOL(@"GO_ThermalBypass", sender.on); }
+- (void)memChanged:(UISwitch *)sender { go_antiMemKill = sender.on; SAVE_BOOL(@"GO_AntiMemKill", sender.on); }
+- (void)afkChanged:(UISwitch *)sender { go_backgroundAFK = sender.on; SAVE_BOOL(@"GO_BackgroundAFK", sender.on); }
 @end
 
-// ==========================================
-// COMPONENT 3: TIÊM VÀO HỆ THỐNG
-// ==========================================
-static PerformanceHUDWindow *hudWindow;
+// =====================================================
+// LÕI HOOKS (ĐỘ PHÂN GIẢI + 3 CHỨC NĂNG)
+// =====================================================
+%hook UIScreen
+- (CGFloat)scale { return go_scale < 3.0 ? go_scale : %orig; }
+- (CGFloat)nativeScale { return go_scale < 3.0 ? go_scale : %orig; }
+%end
+%hook UIWindow
+- (void)setContentScaleFactor:(CGFloat)scale { %orig(go_scale < 3.0 ? go_scale : scale); }
+%end
+%hook UIView
+- (void)setContentScaleFactor:(CGFloat)scale { %orig(go_scale < 3.0 ? go_scale : scale); }
+%end
+%hook CAMetalLayer
+- (void)setContentsScale:(CGFloat)scale { %orig(go_scale < 3.0 ? go_scale : scale); }
+%end
+%hook CAEAGLLayer
+- (void)setContentsScale:(CGFloat)scale { %orig(go_scale < 3.0 ? go_scale : scale); }
+%end
+
+%hook NSProcessInfo
+- (NSProcessInfoThermalState)thermalState {
+    if (go_thermalBypass) return NSProcessInfoThermalStateNominal; 
+    return %orig;
+}
+%end
+
+%hook UIApplication
+- (void)didReceiveMemoryWarning {
+    if (go_antiMemKill) return; 
+    %orig;
+}
+- (void)_performMemoryWarning {
+    if (go_antiMemKill) return; 
+    %orig;
+}
+- (UIApplicationState)applicationState {
+    if (go_backgroundAFK) return UIApplicationStateActive; 
+    return %orig;
+}
+- (BOOL)_isSuspended {
+    if (go_backgroundAFK) return NO;
+    return %orig;
+}
+- (BOOL)_isBackground {
+    if (go_backgroundAFK) return NO;
+    return %orig;
+}
+%end
+
+// =====================================================
+// TIÊM MENU VÀO GAME
+// =====================================================
+static FullMenuWindow *fullWindow;
 
 %hook UIWindowScene
 - (void)_readySceneForConnection {
@@ -190,8 +229,9 @@ static PerformanceHUDWindow *hudWindow;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         dispatch_async(dispatch_get_main_queue(), ^{
-            hudWindow = [[PerformanceHUDWindow alloc] initWithFrame:CGRectMake(20, 50, 185, 75)];
-            hudWindow.hidden = NO;
+            LoadSettings(); 
+            fullWindow = [[FullMenuWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+            fullWindow.hidden = NO;
         });
     });
 }
