@@ -14,10 +14,15 @@ static void LoadSettings() {
 }
 #define SAVE_FLOAT(key, val) [[NSUserDefaults standardUserDefaults] setFloat:val forKey:key]; [[NSUserDefaults standardUserDefaults] synchronize]
 
-// --- BỘ BẢO KÊ XOAY MÀN HÌNH (Chép bài Game) ---
+// --- BỘ BẢO KÊ XOAY MÀN HÌNH ---
 @interface GORootVC : UIViewController
 @end
 @implementation GORootVC
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor clearColor];
+    self.view.userInteractionEnabled = NO; // FIX TRỌNG TÂM: Đập vỡ kính cường lực cản cảm ứng
+}
 - (BOOL)prefersStatusBarHidden { return YES; }
 - (UIViewController *)gameRootVC {
     if (@available(iOS 13.0, *)) {
@@ -134,23 +139,21 @@ static void LoadSettings() {
     return self;
 }
 
-// FIX: Cảm ứng chỉ ăn vào nút hoặc menu, không bị lệch khi xoay
-- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
-    if (!self.floatingBtn.hidden) {
-        CGPoint pntBtn = [self convertPoint:point toView:self.floatingBtn];
-        if ([self.floatingBtn pointInside:pntBtn withEvent:event]) return YES;
+// FIX TRỌNG TÂM: Thay pointInside bằng hitTest để định vị cảm ứng tuyệt đối
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    if (!self.floatingBtn.hidden && CGRectContainsPoint(self.floatingBtn.frame, point)) {
+        return self.floatingBtn; // Bấm trúng nút Tên Lửa
     }
-    if (!self.menuPanel.hidden) {
-        CGPoint pntPanel = [self convertPoint:point toView:self.menuPanel];
-        if ([self.menuPanel pointInside:pntPanel withEvent:event]) return YES;
+    if (!self.menuPanel.hidden && CGRectContainsPoint(self.menuPanel.frame, point)) {
+        CGPoint pointInPanel = [self convertPoint:point toView:self.menuPanel];
+        return [self.menuPanel hitTest:pointInPanel withEvent:event]; // Bấm trúng Menu
     }
-    return NO;
+    return nil; // Xuyên thấu thẳng xuống game
 }
 
 - (void)toggleMenu { self.menuPanel.hidden = !self.menuPanel.hidden; }
 - (void)hideKeyboard { [self.scaleInput resignFirstResponder]; }
 
-// FIX KÉO THẢ MƯỢT
 - (void)handlePan:(UIPanGestureRecognizer *)recognizer {
     CGPoint translation = [recognizer translationInView:self];
     self.floatingBtn.center = CGPointMake(self.floatingBtn.center.x + translation.x, self.floatingBtn.center.y + translation.y);
@@ -166,7 +169,6 @@ static void LoadSettings() {
     SAVE_FLOAT(@"GO_Scale", val);
 }
 
-// Luôn giữ Menu ở giữa màn hình
 - (void)layoutSubviews {
     [super layoutSubviews];
     if (!self.menuPanel.hidden) {
@@ -214,6 +216,8 @@ static GOMenuWindow *goWindow;
             goWindow.windowScene = (UIWindowScene *)self;
             goWindow.rootViewController = [[GORootVC alloc] init];
             goWindow.hidden = NO;
+            // Đẩy Window lên trên cùng để không bị View của game đè
+            [goWindow makeKeyAndVisible]; 
         });
     });
 }
