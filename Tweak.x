@@ -3,50 +3,43 @@
 #import <Foundation/Foundation.h>
 
 // =====================================================
-// KÉT SẮT LƯU TRỮ (FULL 4 CHỨC NĂNG)
+// KÉT SẮT LƯU TRỮ 
 // =====================================================
 static CGFloat go_scale = 3.0;
-static BOOL go_thermalBypass = NO;
-static BOOL go_antiMemKill = NO;
-static BOOL go_backgroundAFK = NO;
 
 static void LoadSettings() {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    if ([defaults objectForKey:@"GO_Scale"]) {
-        go_scale = [defaults floatForKey:@"GO_Scale"];
+    if ([[NSUserDefaults standardUserDefaults] objectForKey:@"GO_Scale"]) {
+        go_scale = [[NSUserDefaults standardUserDefaults] floatForKey:@"GO_Scale"];
     } else {
         go_scale = [UIScreen mainScreen].scale;
     }
-    go_thermalBypass = [defaults boolForKey:@"GO_ThermalBypass"];
-    go_antiMemKill = [defaults boolForKey:@"GO_AntiMemKill"];
-    go_backgroundAFK = [defaults boolForKey:@"GO_BackgroundAFK"];
 }
 
 #define SAVE_FLOAT(key, val) [[NSUserDefaults standardUserDefaults] setFloat:val forKey:key]; [[NSUserDefaults standardUserDefaults] synchronize]
-#define SAVE_BOOL(key, val) [[NSUserDefaults standardUserDefaults] setBool:val forKey:key]; [[NSUserDefaults standardUserDefaults] synchronize]
 
 // =====================================================
-// GIAO DIỆN MENU (Nút Tên Lửa 🚀)
+// GIAO DIỆN MENU (Tối giản, chỉ có Ô nhập Scale)
 // =====================================================
-@interface FullMenuWindow : UIWindow
+@interface MinimalMenuWindow : UIWindow
 @property (nonatomic, strong) UIButton *floatingBtn;
 @property (nonatomic, strong) UIView *menuView;
-@property (nonatomic, strong) UILabel *scaleLabel;
+@property (nonatomic, strong) UITextField *scaleInput;
 @end
 
-@implementation FullMenuWindow
+@implementation MinimalMenuWindow
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
         self.windowLevel = UIWindowLevelStatusBar + 200.0;
         self.backgroundColor = [UIColor clearColor];
         
+        // Nút nổi 🚀
         self.floatingBtn = [UIButton buttonWithType:UIButtonTypeCustom];
         self.floatingBtn.frame = CGRectMake(20, 100, 45, 45);
         self.floatingBtn.backgroundColor = [UIColor colorWithWhite:0.1 alpha:0.8];
         self.floatingBtn.layer.cornerRadius = 22.5;
         self.floatingBtn.layer.borderWidth = 1.5;
-        self.floatingBtn.layer.borderColor = [UIColor greenColor].CGColor;
+        self.floatingBtn.layer.borderColor = [UIColor cyanColor].CGColor;
         [self.floatingBtn setTitle:@"🚀" forState:UIControlStateNormal];
         self.floatingBtn.titleLabel.font = [UIFont systemFontOfSize:20];
         [self.floatingBtn addTarget:self action:@selector(toggleMenu) forControlEvents:UIControlEventTouchUpInside];
@@ -55,83 +48,74 @@ static void LoadSettings() {
         [self.floatingBtn addGestureRecognizer:pan];
         [self addSubview:self.floatingBtn];
         
-        self.menuView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 260, 320)];
+        // Bảng Menu Thu Gọn
+        self.menuView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 260, 170)];
         self.menuView.center = self.center;
         self.menuView.backgroundColor = [UIColor colorWithWhite:0.05 alpha:0.95];
         self.menuView.layer.cornerRadius = 15;
         self.menuView.layer.borderWidth = 1;
         self.menuView.layer.borderColor = [UIColor darkGrayColor].CGColor;
         self.menuView.hidden = YES;
+        
+        // Chạm ra ngoài để ẩn bàn phím
+        UITapGestureRecognizer *tapHide = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideKeyboard)];
+        [self.menuView addGestureRecognizer:tapHide];
         [self addSubview:self.menuView];
         
-        UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(0, 10, 260, 30)];
-        title.text = @"GAME OPTIMIZER MAX";
-        title.textColor = [UIColor greenColor];
-        title.font = [UIFont boldSystemFontOfSize:18];
+        UILabel *title = [[UILabel alloc] initWithFrame:CGRectMake(0, 10, 260, 25)];
+        title.text = @"GAME OPTIMIZER";
+        title.textColor = [UIColor cyanColor];
+        title.font = [UIFont boldSystemFontOfSize:16];
         title.textAlignment = NSTextAlignmentCenter;
         [self.menuView addSubview:title];
         
-        UIButton *closeBtn = [UIButton buttonWithType:UIButtonTypeSystem];
-        closeBtn.frame = CGRectMake(220, 10, 30, 30);
-        [closeBtn setTitle:@"X" forState:UIControlStateNormal];
-        [closeBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
-        closeBtn.titleLabel.font = [UIFont boldSystemFontOfSize:18];
-        [closeBtn addTarget:self action:@selector(toggleMenu) forControlEvents:UIControlEventTouchUpInside];
-        [self.menuView addSubview:closeBtn];
+        // Ghi chú về Scale mặc định
+        UILabel *infoLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 40, 240, 30)];
+        infoLabel.text = @"Lưu ý: Scale mặc định của thiết bị/App thường là 3.0 (hoặc 2.0).";
+        infoLabel.textColor = [UIColor lightGrayColor];
+        infoLabel.font = [UIFont systemFontOfSize:10];
+        infoLabel.textAlignment = NSTextAlignmentCenter;
+        infoLabel.numberOfLines = 2;
+        [self.menuView addSubview:infoLabel];
         
-        UILabel *scTitle = [[UILabel alloc] initWithFrame:CGRectMake(15, 50, 150, 20)];
-        scTitle.text = @"Độ Phân Giải GPU";
-        scTitle.textColor = [UIColor whiteColor];
-        scTitle.font = [UIFont systemFontOfSize:13];
-        [self.menuView addSubview:scTitle];
+        // Ô nhập Scale
+        self.scaleInput = [[UITextField alloc] initWithFrame:CGRectMake(20, 80, 130, 35)];
+        self.scaleInput.backgroundColor = [UIColor colorWithWhite:0.2 alpha:1.0];
+        self.scaleInput.textColor = [UIColor yellowColor];
+        self.scaleInput.font = [UIFont boldSystemFontOfSize:14];
+        self.scaleInput.textAlignment = NSTextAlignmentCenter;
+        self.scaleInput.keyboardType = UIKeyboardTypeDecimalPad;
+        self.scaleInput.text = [NSString stringWithFormat:@"%.2f", go_scale];
+        self.scaleInput.layer.cornerRadius = 8;
+        // Thêm nút "Xong" trên bàn phím ảo
+        UIToolbar *toolbar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, 44)];
+        UIBarButtonItem *flexSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
+        UIBarButtonItem *doneBtn = [[UIBarButtonItem alloc] initWithTitle:@"Xong" style:UIBarButtonItemStyleDone target:self action:@selector(hideKeyboard)];
+        [toolbar setItems:@[flexSpace, doneBtn]];
+        self.scaleInput.inputAccessoryView = toolbar;
+        [self.menuView addSubview:self.scaleInput];
         
-        self.scaleLabel = [[UILabel alloc] initWithFrame:CGRectMake(180, 50, 60, 20)];
-        self.scaleLabel.text = [NSString stringWithFormat:@"%.1fx", go_scale];
-        self.scaleLabel.textColor = [UIColor orangeColor];
-        self.scaleLabel.font = [UIFont boldSystemFontOfSize:13];
-        self.scaleLabel.textAlignment = NSTextAlignmentRight;
-        [self.menuView addSubview:self.scaleLabel];
+        // Nút Áp Dụng
+        UIButton *applyBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        applyBtn.frame = CGRectMake(160, 80, 80, 35);
+        applyBtn.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1.0];
+        applyBtn.layer.cornerRadius = 8;
+        applyBtn.layer.borderWidth = 1;
+        applyBtn.layer.borderColor = [UIColor greenColor].CGColor;
+        [applyBtn setTitle:@"Áp Dụng" forState:UIControlStateNormal];
+        [applyBtn setTitleColor:[UIColor greenColor] forState:UIControlStateNormal];
+        applyBtn.titleLabel.font = [UIFont boldSystemFontOfSize:13];
+        [applyBtn addTarget:self action:@selector(applyScale) forControlEvents:UIControlEventTouchUpInside];
+        [self.menuView addSubview:applyBtn];
         
-        UISlider *scaleSlider = [[UISlider alloc] initWithFrame:CGRectMake(15, 75, 230, 30)];
-        scaleSlider.minimumValue = 1.0;
-        scaleSlider.maximumValue = 3.0;
-        scaleSlider.value = go_scale;
-        [scaleSlider addTarget:self action:@selector(scaleChanged:) forControlEvents:UIControlEventValueChanged];
-        [self.menuView addSubview:scaleSlider];
-        
-        UILabel *scNote = [[UILabel alloc] initWithFrame:CGRectMake(15, 105, 230, 15)];
-        scNote.text = @"*Khởi động lại game để áp dụng";
-        scNote.textColor = [UIColor grayColor];
-        scNote.font = [UIFont systemFontOfSize:10];
-        [self.menuView addSubview:scNote];
-        
-        [self createSwitchWithY:135 title:@"Đóng Băng Cảm Biến Nhiệt" state:go_thermalBypass action:@selector(thermalChanged:)];
-        [self createSwitchWithY:185 title:@"Khiên Chống Văng RAM" state:go_antiMemKill action:@selector(memChanged:)];
-        [self createSwitchWithY:235 title:@"Chạy Ngầm Bất Tử (AFK)" state:go_backgroundAFK action:@selector(afkChanged:)];
-        
-        UILabel *warning = [[UILabel alloc] initWithFrame:CGRectMake(10, 285, 240, 30)];
-        warning.text = @"⚠️ Bật Đóng Băng Nhiệt bắt buộc xài sò lạnh!";
-        warning.textColor = [UIColor redColor];
-        warning.font = [UIFont boldSystemFontOfSize:10];
-        warning.textAlignment = NSTextAlignmentCenter;
-        warning.numberOfLines = 2;
-        [self.menuView addSubview:warning];
+        UILabel *warnLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 125, 260, 20)];
+        warnLabel.text = @"Khởi động lại Game để áp dụng!";
+        warnLabel.textColor = [UIColor orangeColor];
+        warnLabel.font = [UIFont boldSystemFontOfSize:11];
+        warnLabel.textAlignment = NSTextAlignmentCenter;
+        [self.menuView addSubview:warnLabel];
     }
     return self;
-}
-
-- (void)createSwitchWithY:(CGFloat)y title:(NSString*)title state:(BOOL)state action:(SEL)action {
-    UILabel *lbl = [[UILabel alloc] initWithFrame:CGRectMake(15, y + 5, 180, 20)];
-    lbl.text = title;
-    lbl.textColor = [UIColor whiteColor];
-    lbl.font = [UIFont boldSystemFontOfSize:13];
-    [self.menuView addSubview:lbl];
-    
-    UISwitch *sw = [[UISwitch alloc] initWithFrame:CGRectMake(195, y, 50, 30)];
-    sw.on = state;
-    sw.onTintColor = [UIColor greenColor];
-    [sw addTarget:self action:action forControlEvents:UIControlEventValueChanged];
-    [self.menuView addSubview:sw];
 }
 
 - (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
@@ -140,9 +124,8 @@ static void LoadSettings() {
     return NO;
 }
 
-- (void)toggleMenu {
-    self.menuView.hidden = !self.menuView.hidden;
-}
+- (void)toggleMenu { self.menuView.hidden = !self.menuView.hidden; }
+- (void)hideKeyboard { [self.scaleInput resignFirstResponder]; }
 
 static CGPoint startCenter;
 static CGPoint startTouch;
@@ -156,21 +139,22 @@ static CGPoint startTouch;
     }
 }
 
-- (void)scaleChanged:(UISlider *)sender {
-    float val = round(sender.value * 2.0) / 2.0; 
-    sender.value = val;
-    self.scaleLabel.text = [NSString stringWithFormat:@"%.1fx", val];
+- (void)applyScale {
+    [self hideKeyboard];
+    float val = [self.scaleInput.text floatValue];
+    // Chặn ép xuống số 0 hoặc âm làm crash game
+    if (val <= 0.1) val = 0.1; 
+    self.scaleInput.text = [NSString stringWithFormat:@"%.2f", val];
     go_scale = val;
     SAVE_FLOAT(@"GO_Scale", val);
 }
-- (void)thermalChanged:(UISwitch *)sender { go_thermalBypass = sender.on; SAVE_BOOL(@"GO_ThermalBypass", sender.on); }
-- (void)memChanged:(UISwitch *)sender { go_antiMemKill = sender.on; SAVE_BOOL(@"GO_AntiMemKill", sender.on); }
-- (void)afkChanged:(UISwitch *)sender { go_backgroundAFK = sender.on; SAVE_BOOL(@"GO_BackgroundAFK", sender.on); }
 @end
 
 // =====================================================
-// LÕI HOOKS (ĐỘ PHÂN GIẢI + 3 CHỨC NĂNG)
+// LÕI HOOKS (CHẠY NGẦM 100%)
 // =====================================================
+
+// 1. MODULE ÉP ĐỘ PHÂN GIẢI
 %hook UIScreen
 - (CGFloat)scale { return go_scale < 3.0 ? go_scale : %orig; }
 - (CGFloat)nativeScale { return go_scale < 3.0 ? go_scale : %orig; }
@@ -188,40 +172,23 @@ static CGPoint startTouch;
 - (void)setContentsScale:(CGFloat)scale { %orig(go_scale < 3.0 ? go_scale : scale); }
 %end
 
+// 2. MODULE ĐÓNG BĂNG NHIỆT (Luôn bật ẩn)
 %hook NSProcessInfo
 - (NSProcessInfoThermalState)thermalState {
-    if (go_thermalBypass) return NSProcessInfoThermalStateNominal; 
-    return %orig;
+    return NSProcessInfoThermalStateNominal; // Luôn báo máy mát
 }
 %end
 
+// 3. MODULE KHIÊN RAM (Luôn bật ẩn)
 %hook UIApplication
-- (void)didReceiveMemoryWarning {
-    if (go_antiMemKill) return; 
-    %orig;
-}
-- (void)_performMemoryWarning {
-    if (go_antiMemKill) return; 
-    %orig;
-}
-- (UIApplicationState)applicationState {
-    if (go_backgroundAFK) return UIApplicationStateActive; 
-    return %orig;
-}
-- (BOOL)_isSuspended {
-    if (go_backgroundAFK) return NO;
-    return %orig;
-}
-- (BOOL)_isBackground {
-    if (go_backgroundAFK) return NO;
-    return %orig;
-}
+- (void)didReceiveMemoryWarning { return; } // Chặn cảnh báo RAM
+- (void)_performMemoryWarning { return; }
 %end
 
 // =====================================================
 // TIÊM MENU VÀO GAME
 // =====================================================
-static FullMenuWindow *fullWindow;
+static MinimalMenuWindow *minWindow;
 
 %hook UIWindowScene
 - (void)_readySceneForConnection {
@@ -230,8 +197,8 @@ static FullMenuWindow *fullWindow;
     dispatch_once(&onceToken, ^{
         dispatch_async(dispatch_get_main_queue(), ^{
             LoadSettings(); 
-            fullWindow = [[FullMenuWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-            fullWindow.hidden = NO;
+            minWindow = [[MinimalMenuWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+            minWindow.hidden = NO;
         });
     });
 }
