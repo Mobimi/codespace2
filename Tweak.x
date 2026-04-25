@@ -21,7 +21,7 @@ static void LoadSettings() {
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor clearColor];
-    self.view.userInteractionEnabled = NO; // FIX TRỌNG TÂM: Đập vỡ kính cường lực cản cảm ứng
+    self.view.userInteractionEnabled = NO; 
 }
 - (BOOL)prefersStatusBarHidden { return YES; }
 - (UIViewController *)gameRootVC {
@@ -59,7 +59,6 @@ static void LoadSettings() {
         self.windowLevel = UIWindowLevelStatusBar + 200.0;
         self.backgroundColor = [UIColor clearColor]; 
         
-        // Nút nổi
         self.floatingBtn = [UIButton buttonWithType:UIButtonTypeCustom];
         self.floatingBtn.frame = CGRectMake(20, 100, 45, 45);
         self.floatingBtn.backgroundColor = [UIColor colorWithWhite:0.1 alpha:0.8];
@@ -74,7 +73,6 @@ static void LoadSettings() {
         [self.floatingBtn addGestureRecognizer:pan];
         [self addSubview:self.floatingBtn];
         
-        // Bảng Menu (Panel)
         self.menuPanel = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 260, 170)];
         self.menuPanel.center = CGPointMake(frame.size.width/2, frame.size.height/2);
         self.menuPanel.backgroundColor = [UIColor colorWithWhite:0.05 alpha:0.95];
@@ -139,16 +137,15 @@ static void LoadSettings() {
     return self;
 }
 
-// FIX TRỌNG TÂM: Thay pointInside bằng hitTest để định vị cảm ứng tuyệt đối
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
     if (!self.floatingBtn.hidden && CGRectContainsPoint(self.floatingBtn.frame, point)) {
-        return self.floatingBtn; // Bấm trúng nút Tên Lửa
+        return self.floatingBtn; 
     }
     if (!self.menuPanel.hidden && CGRectContainsPoint(self.menuPanel.frame, point)) {
         CGPoint pointInPanel = [self convertPoint:point toView:self.menuPanel];
-        return [self.menuPanel hitTest:pointInPanel withEvent:event]; // Bấm trúng Menu
+        return [self.menuPanel hitTest:pointInPanel withEvent:event]; 
     }
-    return nil; // Xuyên thấu thẳng xuống game
+    return nil; 
 }
 
 - (void)toggleMenu { self.menuPanel.hidden = !self.menuPanel.hidden; }
@@ -216,8 +213,6 @@ static GOMenuWindow *goWindow;
             goWindow.windowScene = (UIWindowScene *)self;
             goWindow.rootViewController = [[GORootVC alloc] init];
             goWindow.hidden = NO;
-            // Đẩy Window lên trên cùng để không bị View của game đè
-            [goWindow makeKeyAndVisible]; 
         });
     });
 }
