@@ -29,7 +29,7 @@
         [self addSubview:self.floatingBtn];
 
         // 2. BẢNG MENU CHÍNH
-        self.menuPanel = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 260, 450)];
+        self.menuPanel = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 260, 490)];
         self.menuPanel.center = CGPointMake(frame.size.width/2, frame.size.height/2);
         self.menuPanel.backgroundColor = [UIColor colorWithWhite:0.05 alpha:0.95];
         self.menuPanel.layer.cornerRadius = 15;
