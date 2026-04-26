@@ -13,8 +13,20 @@
 - (BOOL)shouldAutorotate { 
     return YES; 
 }
-- (UIInterfaceOrientationMask)supportedInterfaceOrientations { 
-    return UIInterfaceOrientationMaskAll; 
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    for (UIWindowScene *scene in [UIApplication sharedApplication].connectedScenes) {
+        if (![scene isKindOfClass:[UIWindowScene class]]) continue;
+        for (UIWindow *win in [(UIWindowScene *)scene windows]) {
+            if ([win isKindOfClass:NSClassFromString(@"GOMenuWindow")]) continue;
+            if (win.rootViewController) {
+                return [win.rootViewController supportedInterfaceOrientations];
+            }
+        }
+    }
+    return UIInterfaceOrientationMaskAll;
+}
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+    return [UIApplication sharedApplication].statusBarOrientation;
 }
 - (BOOL)prefersStatusBarHidden {
     return YES;
