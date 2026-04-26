@@ -90,7 +90,7 @@
 
 
         // --- CẢNH BÁO ---
-        UILabel *warn = [[UILabel alloc] initWithFrame:CGRectMake(0, 390, 260, 40)];
+        UILabel *warn = [[UILabel alloc] initWithFrame:CGRectMake(0, 430, 260, 40)];
         warn.text = @"Bật/Tắt xong nhớ khởi động lại\ngame để có hiệu lực!";
         warn.numberOfLines = 2;
         warn.textColor = [UIColor orangeColor];
