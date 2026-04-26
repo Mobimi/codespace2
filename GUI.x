@@ -6,12 +6,28 @@
 @property (nonatomic, strong) UITextField *scaleInput;
 @end
 
+@interface GOMenuViewController : UIViewController
+@end
+
+@implementation GOMenuViewController
+- (BOOL)shouldAutorotate { 
+    return YES; 
+}
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations { 
+    return UIInterfaceOrientationMaskAll; 
+}
+- (BOOL)prefersStatusBarHidden {
+    return YES;
+}
+@end
+
 @implementation GOMenuWindow
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-        self.windowLevel = UIWindowLevelStatusBar + 200.0;
+        self.windowLevel = UIWindowLevelAlert + 1;
         self.backgroundColor = [UIColor clearColor]; 
+        self.rootViewController = [[GOMenuViewController alloc] init];
 
         // 1. NÚT LƠ LỬNG
         self.floatingBtn = [UIButton buttonWithType:UIButtonTypeCustom];
