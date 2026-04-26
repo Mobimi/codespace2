@@ -29,7 +29,7 @@
         [self addSubview:self.floatingBtn];
 
         // 2. BẢNG MENU CHÍNH
-        self.menuPanel = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 260, 490)];
+        self.menuPanel = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 260, 450)];
         self.menuPanel.center = CGPointMake(frame.size.width/2, frame.size.height/2);
         self.menuPanel.backgroundColor = [UIColor colorWithWhite:0.05 alpha:0.95];
         self.menuPanel.layer.cornerRadius = 15;
@@ -86,11 +86,10 @@
         [self createSwitchWithTitle:@"UI Anim Killer" yPos:260 key:@"GO_AnimKiller"];
         [self createSwitchWithTitle:@"Anti-Blur GPU Saver" yPos:300 key:@"GO_AntiBlur"];
         [self createSwitchWithTitle:@"Block Analytics" yPos:340 key:@"GO_AnalyticsBlocker"];
-        [self createSwitchWithTitle:@"Hiển thị FPS & CPU HUD" yPos:380 key:@"GO_PerfHUD"];
 
 
         // --- CẢNH BÁO ---
-        UILabel *warn = [[UILabel alloc] initWithFrame:CGRectMake(0, 430, 260, 40)];
+        UILabel *warn = [[UILabel alloc] initWithFrame:CGRectMake(0, 390, 260, 40)];
         warn.text = @"Bật/Tắt xong nhớ khởi động lại\ngame để có hiệu lực!";
         warn.numberOfLines = 2;
         warn.textColor = [UIColor orangeColor];
