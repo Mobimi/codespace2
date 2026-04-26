@@ -1,25 +1,33 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-%hook UIWindowScene
-- (void)_readySceneForConnection {
-    // Bắt buộc phải gọi %orig để App/Game khởi tạo UI bình thường, không là đen màn hình
+// Hook vào UIApplication thay vì UIWindowScene để né xung đột với GUI.x
+%hook UIApplication
+- (void)applicationDidBecomeActive:(UIApplication *)application {
     %orig; 
     
-    // Mở két sắt xem công tắc có bật không
-    BOOL isEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"GO_CPUPriority"];
-    
-    if (isEnabled) {
-        // Lấy luồng chạy chính của game
-        NSThread *mainThread = [NSThread mainThread];
+    // Chỉ kích hoạt 1 lần duy nhất khi game mở lên
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
         
-        // Ép lên mức độ ưu tiên cao nhất (User Interactive)
-        if ([mainThread respondsToSelector:@selector(setQualityOfService:)]) {
-            [mainThread setQualityOfService:NSQualityOfServiceUserInteractive];
+        // Mở két sắt chung xem công tắc có bật không
+        NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"];
+        BOOL isEnabled = [defaults boolForKey:@"GO_CPUPriority"];
+        
+        if (isEnabled) {
+            // Đẩy lệnh này vào luồng chính để buff sức mạnh
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSThread *mainThread = [NSThread mainThread];
+                
+                // Ép lên mức độ ưu tiên cao nhất (User Interactive)
+                if ([mainThread respondsToSelector:@selector(setQualityOfService:)]) {
+                    [mainThread setQualityOfService:NSQualityOfServiceUserInteractive];
+                }
+                
+                // Set quyền tranh giành CPU tuyệt đối (1.0 là max)
+                [mainThread setThreadPriority:1.0];
+            });
         }
-        
-        // Set quyền tranh giành CPU tuyệt đối (1.0 là max)
-        [mainThread setThreadPriority:1.0];
-    }
+    });
 }
 %end
