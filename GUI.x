@@ -29,7 +29,7 @@
         [self addSubview:self.floatingBtn];
 
         // 2. BẢNG MENU CHÍNH
-        self.menuPanel = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 260, 330)];
+        self.menuPanel = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 260, 450)];
         self.menuPanel.center = CGPointMake(frame.size.width/2, frame.size.height/2);
         self.menuPanel.backgroundColor = [UIColor colorWithWhite:0.05 alpha:0.95];
         self.menuPanel.layer.cornerRadius = 15;
@@ -76,14 +76,20 @@
         [applyBtn addTarget:self action:@selector(applyScale) forControlEvents:UIControlEventTouchUpInside];
         [self.menuPanel addSubview:applyBtn];
 
-        // --- 4 CÔNG TẮC CHỨC NĂNG ---
+        // 4 công tắc cũ
         [self createSwitchWithTitle:@"CPU Priority Boost" yPos:100 key:@"GO_CPUPriority"];
         [self createSwitchWithTitle:@"Input Lag Reduce" yPos:140 key:@"GO_InputLag"];
         [self createSwitchWithTitle:@"RAM Warn Bypass" yPos:180 key:@"GO_RAMBypass"];
         [self createSwitchWithTitle:@"Anti-Throttling" yPos:220 key:@"GO_ThermalBypass"];
 
+        // 3 công tắc MỚI NHÉT THÊM VÀO ĐÂY
+        [self createSwitchWithTitle:@"UI Anim Killer" yPos:260 key:@"GO_AnimKiller"];
+        [self createSwitchWithTitle:@"Console Log Muter" yPos:300 key:@"GO_LogMuter"];
+        [self createSwitchWithTitle:@"Block Analytics" yPos:340 key:@"GO_AnalyticsBlocker"];
+
+
         // --- CẢNH BÁO ---
-        UILabel *warn = [[UILabel alloc] initWithFrame:CGRectMake(0, 270, 260, 40)];
+        UILabel *warn = [[UILabel alloc] initWithFrame:CGRectMake(0, 390, 260, 40)];
         warn.text = @"Bật/Tắt xong nhớ khởi động lại\ngame để có hiệu lực!";
         warn.numberOfLines = 2;
         warn.textColor = [UIColor orangeColor];
