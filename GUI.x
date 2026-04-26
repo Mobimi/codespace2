@@ -86,6 +86,7 @@
         [self createSwitchWithTitle:@"UI Anim Killer" yPos:260 key:@"GO_AnimKiller"];
         [self createSwitchWithTitle:@"Anti-Blur GPU Saver" yPos:300 key:@"GO_AntiBlur"];
         [self createSwitchWithTitle:@"Block Analytics" yPos:340 key:@"GO_AnalyticsBlocker"];
+        [self createSwitchWithTitle:@"Hiển thị FPS & CPU HUD" yPos:380 key:@"GO_PerfHUD"];
 
 
         // --- CẢNH BÁO ---
