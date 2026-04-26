@@ -57,7 +57,7 @@
         
         // Đọc float từ két sắt, nếu chưa có thì lấy Scale mặc định của màn hình
         float savedScale = [[NSUserDefaults standardUserDefaults] floatForKey:@"GO_Scale"];
-        if (savedScale <= 0.1) savedScale = [UIScreen mainScreen].scale;
+        if (savedScale <= 0.01) savedScale = 1.0; 
         self.scaleInput.text = [NSString stringWithFormat:@"%.2f", savedScale];
         self.scaleInput.layer.cornerRadius = 8;
         
