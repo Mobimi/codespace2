@@ -3,12 +3,12 @@ ARCHS = arm64 arm64e
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = GameOptimizer
+TWEAK_NAME = UniversalOptimizer
 
-# THÊM TÊN 2 FILE MỚI VÀO ĐÂY (Cách nhau bằng dấu cách)
-GameOptimizer_FILES = Tweak.x InputLagReducer.x CPUPriorityBooster.x
+# Danh sách 4 file chiến lược
+UniversalOptimizer_FILES = GUI.x scale.xm input_lag_reduce.xm cpu_priority_booster.xm
 
-GameOptimizer_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-error
-GameOptimizer_FRAMEWORKS = UIKit QuartzCore Foundation CoreGraphics
+UniversalOptimizer_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-error
+UniversalOptimizer_FRAMEWORKS = UIKit QuartzCore Foundation CoreGraphics
 
 include $(THEOS_MAKE_PATH)/tweak.mk
