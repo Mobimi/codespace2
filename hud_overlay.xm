@@ -194,17 +194,28 @@
 // ==========================================
 static PerformanceHUDWindow *hudWindow;
 
-// [FIX 2] Hook vào UIApplication thay vì UIWindowScene để trị Roblox
 %hook UIApplication
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     %orig;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         dispatch_async(dispatch_get_main_queue(), ^{
+            // Khởi tạo HUD
             hudWindow = [[PerformanceHUDWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
             hudWindow.rootViewController = [[HUDRootVC alloc] init];
+            
+            // [ĐOẠN CỨU MẠNG]: Tìm và gắn WindowScene hiện tại cho HUD
+            if (@available(iOS 13.0, *)) {
+                for (UIScene *scene in application.connectedScenes) {
+                    if (scene.activationState == UISceneActivationStateForegroundActive && [scene isKindOfClass:[UIWindowScene class]]) {
+                        hudWindow.windowScene = (UIWindowScene *)scene;
+                        break;
+                    }
+                }
+            }
+            
+            // Ép hiện hình lên màn hình
             hudWindow.hidden = NO; 
-            // Bản thân hudWindow luôn active, nhưng hudPanel (cái bảng) sẽ hiện/ẩn theo nút gạt
         });
     });
 }
