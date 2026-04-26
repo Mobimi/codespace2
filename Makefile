@@ -5,8 +5,9 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = GameOptimizer
 
-GameOptimizer_FILES = Tweak.x
-# Dòng CFLAGS đã được thêm bùa chống lỗi đồ cổ
+# THÊM TÊN 2 FILE MỚI VÀO ĐÂY (Cách nhau bằng dấu cách)
+GameOptimizer_FILES = Tweak.x InputLagReducer.x CPUPriorityBooster.x
+
 GameOptimizer_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-error
 GameOptimizer_FRAMEWORKS = UIKit QuartzCore Foundation CoreGraphics
 
