@@ -1,37 +1,49 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 
-// Hàm tính toán tỉ lệ dựa trên hệ số %
-static CGFloat getScaledValue(CGFloat origScale) {
-    float multiplier = [[NSUserDefaults standardUserDefaults] floatForKey:@"GO_Scale"];
-    
-    // Nếu chưa nhập gì hoặc nhập 0, mặc định là 1.0 (100% gốc)
-    if (multiplier <= 0.01) return origScale;
-    
-    // Giới hạn an toàn: Không cho giảm dưới 0.2 (tránh màn hình đen/mờ quá mức)
-    if (multiplier < 0.2) multiplier = 0.2;
-    
-    // Trả về: Giá trị gốc của máy * Hệ số bác nhập
-    return origScale * multiplier;
+// Hàm lấy Scale từ két sắt (Hỗ trợ số thực float)
+static CGFloat getGlobalScale() {
+    float savedVal = [[NSUserDefaults standardUserDefaults] floatForKey:@"GO_Scale"];
+    // Nếu chưa chỉnh gì (bằng 0) thì lấy scale gốc của máy
+    if (savedVal <= 0.1) {
+        return [UIScreen mainScreen].scale;
+    }
+    return (CGFloat)savedVal;
 }
 
+// --- HOOK HỆ THỐNG HIỂN THỊ ---
+
 %hook UIScreen
-- (CGFloat)scale { return getScaledValue(%orig); }
-- (CGFloat)nativeScale { return getScaledValue(%orig); }
+- (CGFloat)scale {
+    return getGlobalScale();
+}
+- (CGFloat)nativeScale {
+    return getGlobalScale();
+}
 %end
 
 %hook UIWindow
-- (void)setContentScaleFactor:(CGFloat)scale { %orig(getScaledValue(scale)); }
+- (void)setContentScaleFactor:(CGFloat)scale {
+    %orig(getGlobalScale());
+}
 %end
 
 %hook UIView
-- (void)setContentScaleFactor:(CGFloat)scale { %orig(getScaledValue(scale)); }
+- (void)setContentScaleFactor:(CGFloat)scale {
+    %orig(getGlobalScale());
+}
 %end
 
+// --- HOOK ĐỒ HỌA NẶNG (METAL & OPENGL) ---
+
 %hook CAMetalLayer
-- (void)setContentsScale:(CGFloat)scale { %orig(getScaledValue(scale)); }
+- (void)setContentsScale:(CGFloat)scale {
+    %orig(getGlobalScale());
+}
 %end
 
 %hook CAEAGLLayer
-- (void)setContentsScale:(CGFloat)scale { %orig(getScaledValue(scale)); }
+- (void)setContentsScale:(CGFloat)scale {
+    %orig(getGlobalScale());
+}
 %end
