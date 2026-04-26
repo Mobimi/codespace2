@@ -5,8 +5,8 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = UniversalOptimizer
 
-# Danh sách 4 file chiến lược
-UniversalOptimizer_FILES = GUI.x scale.xm input_lag_reduce.xm cpu_priority_booster.xm
+# Khai báo đủ 1 Trạm điều khiển và 5 Công nhân
+UniversalOptimizer_FILES = GUI.x scale.xm cpu_priority_booster.xm input_lag_reduce.xm ram_optimizer.xm thermal_bypass.xm
 
 UniversalOptimizer_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-error
 UniversalOptimizer_FRAMEWORKS = UIKit QuartzCore Foundation CoreGraphics
