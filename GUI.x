@@ -84,7 +84,7 @@
 
         // 3 công tắc MỚI NHÉT THÊM VÀO ĐÂY
         [self createSwitchWithTitle:@"UI Anim Killer" yPos:260 key:@"GO_AnimKiller"];
-        [self createSwitchWithTitle:@"Console Log Muter" yPos:300 key:@"GO_LogMuter"];
+        [self createSwitchWithTitle:@"Anti-Blur GPU Saver" yPos:300 key:@"GO_AntiBlur"];
         [self createSwitchWithTitle:@"Block Analytics" yPos:340 key:@"GO_AnalyticsBlocker"];
 
 
