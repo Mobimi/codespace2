@@ -145,17 +145,21 @@
 }
 @end
 
-// Tiêm vào Game/App
+// Phải có cái biến static này để iOS nó không xóa mất UI của anh em mình!
+static GOMenuWindow *goWindow;
+
 %hook UIWindowScene
 - (void)_readySceneForConnection {
     %orig;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         dispatch_async(dispatch_get_main_queue(), ^{
-            GOMenuWindow *win = [[GOMenuWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-            win.windowScene = (UIWindowScene *)self;
-            win.hidden = NO;
+            goWindow = [[GOMenuWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+            goWindow.windowScene = (UIWindowScene *)self;
+            // Ép nó nổi lên
+            goWindow.hidden = NO; 
         });
     });
 }
 %end
+
