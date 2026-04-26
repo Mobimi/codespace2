@@ -1,56 +1,44 @@
 #import <Foundation/Foundation.h>
 
-// Hàm helper để check từ khóa cực nhanh, tách ra đây để dùng chung cho 2 hàm Hook bên dưới
+// [TỐI ƯU THEO CLAUDE]: Khởi tạo Mảng từ khóa 1 lần duy nhất để không làm rác RAM
 static BOOL shouldBlockURL(NSString *urlStr) {
-    // Danh sách đen tổng hợp (vừa có của sếp, vừa có của Claude)
-    NSArray *blockedKeywords = @[
-        @"analytics", @"tracking", @"metrics", @"telemetry",
-        @"firebase", @"crashlytics", @"amplitude", @"appsflyer",
-        @"adjust", @"segment", @"roblox.com/analytics",
-        @"facebook.com/tr", @"graph.facebook.com"
-    ];
+    static NSArray *blockedKeywords = nil;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        blockedKeywords = @[
+            @"analytics", @"tracking", @"metrics", @"telemetry",
+            @"firebase", @"crashlytics", @"amplitude", @"appsflyer",
+            @"adjust", @"segment", @"roblox.com/analytics", 
+            @"facebook.com/tr", @"graph.facebook.com"
+        ];
+    });
     
-    for (NSString *keyword in blockedKeywords) {
-        if ([urlStr containsString:keyword]) {
-            return YES; // Bắt được quả tang gián điệp!
-        }
+    for (NSString *kw in blockedKeywords) {
+        if ([urlStr containsString:kw]) return YES;
     }
     return NO;
 }
 
 %hook NSURLSession
 
-// Hook khi game gọi request mạng (Dạng Request)
+// Hook Request
 - (NSURLSessionDataTask *)dataTaskWithRequest:(NSURLRequest *)request {
-    // Dùng Két sắt (SuiteName) để đồng bộ mọi game như Claude báo
-    NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"];
-    BOOL isEnabled = [defaults boolForKey:@"GO_AnalyticsBlocker"];
+    BOOL isEnabled = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:@"GO_AnalyticsBlocker"];
     
-    if (isEnabled && request.URL) {
-        NSString *urlStr = request.URL.absoluteString.lowercaseString;
-        
-        if (shouldBlockURL(urlStr)) {
-            // Bẻ lái request gián điệp úp mặt vào tường (localhost)
-            NSMutableURLRequest *mutReq = [request mutableCopy];
-            mutReq.URL = [NSURL URLWithString:@"http://127.0.0.1"];
-            return %orig(mutReq);
-        }
+    if (isEnabled && request.URL && shouldBlockURL(request.URL.absoluteString.lowercaseString)) {
+        NSMutableURLRequest *mutReq = [request mutableCopy];
+        mutReq.URL = [NSURL URLWithString:@"http://127.0.0.1"];
+        return %orig(mutReq);
     }
     return %orig;
 }
 
-// Hook tương tự với hàm nạp URL trực tiếp (Dạng URL)
+// Hook URL
 - (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url {
-    NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"];
-    BOOL isEnabled = [defaults boolForKey:@"GO_AnalyticsBlocker"];
+    BOOL isEnabled = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:@"GO_AnalyticsBlocker"];
     
-    if (isEnabled && url) {
-        NSString *urlStr = url.absoluteString.lowercaseString;
-        
-        if (shouldBlockURL(urlStr)) {
-            NSURL *fakeUrl = [NSURL URLWithString:@"http://127.0.0.1"];
-            return %orig(fakeUrl);
-        }
+    if (isEnabled && url && shouldBlockURL(url.absoluteString.lowercaseString)) {
+        return %orig([NSURL URLWithString:@"http://127.0.0.1"]);
     }
     return %orig;
 }
