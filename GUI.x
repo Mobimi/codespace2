@@ -402,15 +402,17 @@ static NSArray *switchItems() {
 // ═══════════════════════════════════════════════
 static GOMenuWindow *goWindow;
 
-%hook UIWindowScene
-- (void)_readySceneForConnection {
+%hook UIApplication
+- (void)applicationDidBecomeActive:(UIApplication *)application {
     %orig;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
-                       dispatch_get_main_queue(), ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIWindowScene *scene = (UIWindowScene *)[[[UIApplication sharedApplication]
+                connectedScenes] anyObject];
+            if (!scene) return;
             goWindow = [[GOMenuWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-            goWindow.windowScene = (UIWindowScene *)self;
+            goWindow.windowScene = scene;
             goWindow.hidden = NO;
         });
     });
