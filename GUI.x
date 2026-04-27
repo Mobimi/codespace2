@@ -84,7 +84,7 @@
         self.scaleInput.keyboardType = UIKeyboardTypeDecimalPad;
         
         // Đọc float từ két sắt, nếu chưa có thì lấy Scale mặc định của màn hình
-        float savedScale = [[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] floatForKey:@"GO_Scale"];
+        float savedScale = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] floatForKey:@"GO_Scale"];
         if (savedScale <= 0.1) savedScale = [UIScreen mainScreen].scale;
         self.scaleInput.text = [NSString stringWithFormat:@"%.2f", savedScale];
         self.scaleInput.layer.cornerRadius = 8;
@@ -137,7 +137,7 @@
     [self.menuPanel addSubview:lbl];
 
     UISwitch *sw = [[UISwitch alloc] initWithFrame:CGRectMake(180, y, 50, 30)];
-    sw.on = [[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:key];
+    sw.on = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:key];
     sw.accessibilityIdentifier = key; 
     [sw addTarget:self action:@selector(toggleSwitch:) forControlEvents:UIControlEventValueChanged];
     [self.menuPanel addSubview:sw];
@@ -152,11 +152,11 @@
     float val = [self.scaleInput.text floatValue];
     if (val <= 0.1) val = 0.1; // Chống người dùng nhập số âm hoặc 0
     self.scaleInput.text = [NSString stringWithFormat:@"%.2f", val];
-    [[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] setFloat:val forKey:@"GO_Scale"]; 
+    [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] setFloat:val forKey:@"GO_Scale"]; 
 }
 
 - (void)toggleSwitch:(UISwitch *)sender { 
-    [[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] setBool:sender.isOn forKey:sender.accessibilityIdentifier]; 
+    [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] setBool:sender.isOn forKey:sender.accessibilityIdentifier]; 
 }
 
 // Hàm hỗ trợ Kéo thả (Drag)
