@@ -269,7 +269,7 @@ static CGFloat safeDefaultScale() {
     if (val > 3.0f) val = 3.0f;
     self.scaleInput.text = [NSString stringWithFormat:@"%.2f", val];
     [GO_PREFS setFloat:val forKey:@"GO_Scale"];
-updateGlobalScale((CGFloat)val);
+    updateGlobalScale((CGFloat)val);
 }
 
 - (void)switchToggled:(UISwitch *)sender {
