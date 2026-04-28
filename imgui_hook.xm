@@ -43,7 +43,7 @@ static void loadPrefs() {
     sw_net   = [p boolForKey:@"GO_AnalyticsBlocker"];
     sw_hud   = [p boolForKey:@"GO_PerfHUD"];
     float sv = [p floatForKey:@"GO_Scale"];
-    scaleVal = sv > 0.1f ? sv : (float)[UIScreen mainScreen].scale;
+    scaleVal = sv > 0.1f ? sv : 3.0f;
 }
 
 static void savePrefs() {
