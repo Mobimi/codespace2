@@ -187,53 +187,40 @@ static void renderMenu(CGSize screen) {
 // ═══════════════════════════════════════════════
 //  Hook CAMetalLayer — init ImGui + render
 // ═══════════════════════════════════════════════
-%hook CAMetalLayer
+%hook MTLCommandBuffer
+- (void)presentDrawable:(id<CAMetalDrawable>)drawable {
+    id<MTLDevice> dev = drawable.texture.device;
+    if (!dev) { %orig; return; }
 
-- (id<CAMetalDrawable>)nextDrawable {
-    id<CAMetalDrawable> drawable = %orig;
-    if (!drawable) return drawable;
-
-    id<MTLDevice> dev = self.device;
-    if (!dev) return drawable;
-
-    // Init 1 lần
     if (!gImGuiReady) {
         gDevice = dev;
-        gQueue  = [dev newCommandQueue];
-
+        gQueue = [dev newCommandQueue];
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-        ImGuiIO &io = ImGui::GetIO();
-        io.IniFilename = nullptr; // Không lưu .ini
+        ImGui::GetIO().IniFilename = nullptr;
         applyStyle();
         ImGui_ImplMetal_Init(dev);
         loadPrefs();
         gImGuiReady = true;
     }
 
-    // Tạo render pass đè lên frame của game
     MTLRenderPassDescriptor *rpd = [MTLRenderPassDescriptor renderPassDescriptor];
-    rpd.colorAttachments[0].texture     = drawable.texture;
-    rpd.colorAttachments[0].loadAction  = MTLLoadActionLoad;   // Giữ nguyên frame game
+    rpd.colorAttachments[0].texture = drawable.texture;
+    rpd.colorAttachments[0].loadAction = MTLLoadActionLoad;
     rpd.colorAttachments[0].storeAction = MTLStoreActionStore;
 
-    id<MTLCommandBuffer> cmdBuf = [gQueue commandBuffer];
-
+    id<MTLCommandBuffer> imguiCmdBuf = [gQueue commandBuffer];
     CGSize screen = [UIScreen mainScreen].bounds.size;
-    ImGuiIO &io   = ImGui::GetIO();
-    io.DisplaySize = ImVec2(screen.width, screen.height);
-
     ImGui_ImplMetal_NewFrame(rpd);
     renderMenu(screen);
 
-    id<MTLRenderCommandEncoder> enc = [cmdBuf renderCommandEncoderWithDescriptor:rpd];
-    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), cmdBuf, enc);
+    id<MTLRenderCommandEncoder> enc = [imguiCmdBuf renderCommandEncoderWithDescriptor:rpd];
+    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), imguiCmdBuf, enc);
     [enc endEncoding];
-    [cmdBuf commit];
+    [imguiCmdBuf commit];
 
-    return drawable;
+    %orig(drawable);
 }
-
 %end
 
 // ═══════════════════════════════════════════════
