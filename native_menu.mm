@@ -302,7 +302,7 @@ static CGFloat safeDefaultScale() {
 // ═══════════════════════════════════════════════
 static GOMenuWindow *mainWindow;
 
-%ctor {
+__attribute__((constructor)) static void go_init() {
     @autoreleasepool {
         NSString *path = [[NSBundle mainBundle] bundlePath];
         BOOL isUserApp = [path containsString:@"/Application/"] ||
@@ -329,7 +329,5 @@ static GOMenuWindow *mainWindow;
                 mainWindow.hidden = NO;
             });
         }];
-
-        %init;
     }
 }
