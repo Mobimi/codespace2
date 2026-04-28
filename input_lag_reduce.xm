@@ -4,7 +4,7 @@
 %hook CAMetalLayer
 - (NSUInteger)maximumDrawableCount {
     // Mở két sắt kiểm tra xem công tắc Input Lag có bật không
-    BOOL isEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"GO_InputLag"];
+    BOOL isEnabled = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:@"GO_InputLag"];
     
     if (isEnabled) {
         // Mặc định của iOS thường là 3. Ép xuống 2 để GPU xuất hình ra màn hình nhanh hơn, giảm độ trễ cảm ứng.
