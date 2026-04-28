@@ -405,7 +405,6 @@ static GOMenuWindow *goWindow;
 %hook UIWindow
 - (void)makeKeyAndVisible {
     %orig;
-    if (![[[NSBundle mainBundle] bundlePath] hasSuffix:@".app"]) return;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
@@ -425,3 +424,16 @@ static GOMenuWindow *goWindow;
     });
 }
 %end
+
+%ctor {
+    @autoreleasepool {
+        NSString *bundleID  = [[NSBundle mainBundle] bundleIdentifier];
+        NSString *bundlePath = [[NSBundle mainBundle] bundlePath];
+        BOOL isAppleApp = [bundleID hasPrefix:@"com.apple."];
+        BOOL isUserApp  = [bundlePath containsString:@"/Application/"] ||
+                          [bundlePath containsString:@"/Containers/"];
+        if (isUserApp && !isAppleApp) {
+            %init;
+        }
+    }
+}
