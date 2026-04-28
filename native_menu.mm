@@ -8,6 +8,7 @@
 
 #define GO_SUITE  @"com.universal.optimizer"
 #define GO_PREFS  [[NSUserDefaults alloc] initWithSuiteName:GO_SUITE]
+extern void updateGlobalScale(CGFloat newScale);
 
 // Bảng màu Dark Mode phong cách Hacker
 #define CLR_BG     [UIColor colorWithRed:0.08 green:0.09 blue:0.12 alpha:0.95]
@@ -268,6 +269,7 @@ static CGFloat safeDefaultScale() {
     if (val > 3.0f) val = 3.0f;
     self.scaleInput.text = [NSString stringWithFormat:@"%.2f", val];
     [GO_PREFS setFloat:val forKey:@"GO_Scale"];
+updateGlobalScale((CGFloat)val);
 }
 
 - (void)switchToggled:(UISwitch *)sender {
@@ -290,8 +292,13 @@ static CGFloat safeDefaultScale() {
 
 - (void)panMenu:(UIPanGestureRecognizer *)r {
     CGPoint p = [r translationInView:self];
-    self.menuPanel.center = CGPointMake(self.menuPanel.center.x + p.x,
-                                         self.menuPanel.center.y + p.y);
+    CGPoint newCenter = CGPointMake(self.menuPanel.center.x + p.x,
+                                    self.menuPanel.center.y + p.y);
+    CGFloat halfW = self.menuPanel.frame.size.width  / 2;
+    CGFloat halfH = self.menuPanel.frame.size.height / 2;
+    newCenter.x = MAX(halfW, MIN(self.frame.size.width  - halfW, newCenter.x));
+    newCenter.y = MAX(halfH, MIN(self.frame.size.height - halfH, newCenter.y));
+    self.menuPanel.center = newCenter;
     [r setTranslation:CGPointZero inView:self];
 }
 
