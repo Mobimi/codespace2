@@ -402,19 +402,26 @@ static NSArray *switchItems() {
 // ═══════════════════════════════════════════════
 static GOMenuWindow *goWindow;
 
-%hook UIApplication
-- (void)applicationDidBecomeActive:(UIApplication *)application {
-    %orig;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            UIWindowScene *scene = (UIWindowScene *)[[[UIApplication sharedApplication]
-                connectedScenes] anyObject];
-            if (!scene) return;
-            goWindow = [[GOMenuWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-            goWindow.windowScene = scene;
-            goWindow.hidden = NO;
-        });
-    });
+%ctor {
+    [[NSNotificationCenter defaultCenter]
+        addObserverForName:UIApplicationDidBecomeActiveNotification
+        object:nil
+        queue:[NSOperationQueue mainQueue]
+        usingBlock:^(NSNotification *note) {
+            static dispatch_once_t once;
+            dispatch_once(&once, ^{
+                UIWindowScene *scene = nil;
+                for (UIScene *s in [UIApplication sharedApplication].connectedScenes) {
+                    if ([s isKindOfClass:[UIWindowScene class]]) {
+                        scene = (UIWindowScene *)s;
+                        break;
+                    }
+                }
+                if (!scene) return;
+                goWindow = [[GOMenuWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+                goWindow.windowScene = scene;
+                goWindow.hidden = NO;
+            });
+        }];
 }
-%end
+
