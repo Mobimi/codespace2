@@ -402,26 +402,26 @@ static NSArray *switchItems() {
 // ═══════════════════════════════════════════════
 static GOMenuWindow *goWindow;
 
-%ctor {
-    [[NSNotificationCenter defaultCenter]
-        addObserverForName:UIApplicationDidBecomeActiveNotification
-        object:nil
-        queue:[NSOperationQueue mainQueue]
-        usingBlock:^(NSNotification *note) {
-            static dispatch_once_t once;
-            dispatch_once(&once, ^{
-                UIWindowScene *scene = nil;
-                for (UIScene *s in [UIApplication sharedApplication].connectedScenes) {
-                    if ([s isKindOfClass:[UIWindowScene class]]) {
-                        scene = (UIWindowScene *)s;
-                        break;
-                    }
+%hook UIWindow
+- (void)makeKeyAndVisible {
+    %orig;
+    if (![[[NSBundle mainBundle] bundlePath] hasSuffix:@".app"]) return;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
+        dispatch_get_main_queue(), ^{
+            UIWindowScene *scene = nil;
+            for (UIScene *s in [UIApplication sharedApplication].connectedScenes) {
+                if (s.activationState == UISceneActivationStateForegroundActive
+                    && [s isKindOfClass:[UIWindowScene class]]) {
+                    scene = (UIWindowScene *)s;
+                    break;
                 }
-                if (!scene) return;
-                goWindow = [[GOMenuWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-                goWindow.windowScene = scene;
-                goWindow.hidden = NO;
-            });
-        }];
+            }
+            goWindow = [[GOMenuWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+            if (scene) goWindow.windowScene = scene;
+            goWindow.hidden = NO;
+        });
+    });
 }
-
+%end
