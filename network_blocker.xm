@@ -22,23 +22,22 @@ static BOOL shouldBlockURL(NSString *urlStr) {
 %hook NSURLSession
 
 // Hook Request
-- (NSURLSessionDataTask *)dataTaskWithRequest:(NSURLRequest *)request {
+- (NSURLSessionDataTask *)dataTaskWithRequest:(NSURLRequest *)request
+                            completionHandler:(void (^)(NSData *, NSURLResponse *, NSError *))completionHandler {
     BOOL isEnabled = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:@"GO_AnalyticsBlocker"];
-    
     if (isEnabled && request.URL && shouldBlockURL(request.URL.absoluteString.lowercaseString)) {
         NSMutableURLRequest *mutReq = [request mutableCopy];
         mutReq.URL = [NSURL URLWithString:@"http://127.0.0.1"];
-        return %orig(mutReq);
+        return %orig(mutReq, completionHandler);
     }
     return %orig;
 }
 
-// Hook URL
-- (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url {
+- (NSURLSessionDataTask *)dataTaskWithURL:(NSURL *)url
+                        completionHandler:(void (^)(NSData *, NSURLResponse *, NSError *))completionHandler {
     BOOL isEnabled = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:@"GO_AnalyticsBlocker"];
-    
     if (isEnabled && url && shouldBlockURL(url.absoluteString.lowercaseString)) {
-        return %orig([NSURL URLWithString:@"http://127.0.0.1"]);
+        return %orig([NSURL URLWithString:@"http://127.0.0.1"], completionHandler);
     }
     return %orig;
 }
