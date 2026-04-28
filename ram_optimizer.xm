@@ -5,7 +5,7 @@
 
 // Hook hàm cảnh báo RAM số 1
 - (void)didReceiveMemoryWarning {
-    BOOL isEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"GO_RAMBypass"];
+    BOOL isEnabled = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:@"GO_RAMBypass"];
     
     // Nếu công tắc TẮT, cho phép iOS gửi cảnh báo bình thường
     if (!isEnabled) {
@@ -16,7 +16,7 @@
 
 // Hook hàm cảnh báo RAM số 2 (hàm ẩn của hệ thống)
 - (void)_performMemoryWarning {
-    BOOL isEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"GO_RAMBypass"];
+    BOOL isEnabled = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:@"GO_RAMBypass"];
     
     if (!isEnabled) {
         %orig;
