@@ -1,50 +1,42 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 
-// Hàm lấy Scale từ két sắt chung (Đã cập nhật Suite Name)
+// Cache vào RAM, chỉ đọc disk 1 lần duy nhất
+static CGFloat cachedScale = -1.0;
+
 static CGFloat getGlobalScale() {
-    float savedVal = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] floatForKey:@"GO_Scale"];
-    
-    // Nếu chưa chỉnh gì (bằng 0) thì lấy scale gốc của máy
-    if (savedVal <= 0.1) {
-        return [UIScreen mainScreen].scale;
+    if (cachedScale == -1.0) {
+        float saved = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"]
+                       floatForKey:@"GO_Scale"];
+        cachedScale = (saved > 0.1) ? (CGFloat)saved : [UIScreen mainScreen].scale;
     }
-    return (CGFloat)savedVal;
+    return cachedScale;
 }
 
-// --- HOOK HỆ THỐNG HIỂN THỊ ---
+// Gọi hàm này khi user bấm Apply trong ImGui menu
+void updateGlobalScale(CGFloat newScale) {
+    cachedScale = newScale;
+    [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"]
+     setFloat:newScale forKey:@"GO_Scale"];
+}
 
 %hook UIScreen
-- (CGFloat)scale {
-    return getGlobalScale();
-}
-- (CGFloat)nativeScale {
-    return getGlobalScale();
-}
+- (CGFloat)scale { return getGlobalScale(); }
+- (CGFloat)nativeScale { return getGlobalScale(); }
 %end
 
 %hook UIWindow
-- (void)setContentScaleFactor:(CGFloat)scale {
-    %orig(getGlobalScale());
-}
+- (void)setContentScaleFactor:(CGFloat)scale { %orig(getGlobalScale()); }
 %end
 
 %hook UIView
-- (void)setContentScaleFactor:(CGFloat)scale {
-    %orig(getGlobalScale());
-}
+- (void)setContentScaleFactor:(CGFloat)scale { %orig(getGlobalScale()); }
 %end
 
-// --- HOOK ĐỒ HỌA NẶNG (METAL & OPENGL) ---
-
 %hook CAMetalLayer
-- (void)setContentsScale:(CGFloat)scale {
-    %orig(getGlobalScale());
-}
+- (void)setContentsScale:(CGFloat)scale { %orig(getGlobalScale()); }
 %end
 
 %hook CAEAGLLayer
-- (void)setContentsScale:(CGFloat)scale {
-    %orig(getGlobalScale());
-}
+- (void)setContentsScale:(CGFloat)scale { %orig(getGlobalScale()); }
 %end
