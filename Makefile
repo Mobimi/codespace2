@@ -5,11 +5,8 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = UniversalOptimizer
 
-IMGUI_DIR = imgui
-
 UniversalOptimizer_FILES = \
-	imgui_hook.xm \
-	imgui_touch.mm \
+	native_menu.mm \
 	scale.xm \
 	cpu_priority_booster.xm \
 	input_lag_reduce.xm \
@@ -17,32 +14,17 @@ UniversalOptimizer_FILES = \
 	thermal_bypass.xm \
 	animation_killer.xm \
 	network_blocker.xm \
-	anti_blur.xm \
-	$(IMGUI_DIR)/imgui.cpp \
-	$(IMGUI_DIR)/imgui_draw.cpp \
-	$(IMGUI_DIR)/imgui_tables.cpp \
-	$(IMGUI_DIR)/imgui_widgets.cpp \
-	$(IMGUI_DIR)/backends/imgui_impl_metal.mm
+	anti_blur.xm
 
 UniversalOptimizer_CFLAGS = \
 	-fobjc-arc \
 	-Wno-deprecated-declarations \
-	-Wno-error \
-	-I$(IMGUI_DIR) \
-	-I$(IMGUI_DIR)/backends
-
-UniversalOptimizer_CCFLAGS = \
-	-std=c++17 \
-	-fno-exceptions \
-	-I$(IMGUI_DIR) \
-	-I$(IMGUI_DIR)/backends
+	-Wno-error
 
 UniversalOptimizer_FRAMEWORKS = \
 	UIKit \
 	QuartzCore \
 	Foundation \
-	CoreGraphics \
-	Metal \
-	MetalKit
+	CoreGraphics
 
 include $(THEOS_MAKE_PATH)/tweak.mk
