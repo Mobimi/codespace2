@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#include <pthread.h>
 
 // Hook vào UIApplication thay vì UIWindowScene để né xung đột với GUI.x
 %hook UIApplication
