@@ -18,15 +18,11 @@
         if (isEnabled) {
             // Đẩy lệnh này vào luồng chính để buff sức mạnh
             dispatch_async(dispatch_get_main_queue(), ^{
-                NSThread *mainThread = [NSThread mainThread];
-                
                 // Ép lên mức độ ưu tiên cao nhất (User Interactive)
-                if ([mainThread respondsToSelector:@selector(setQualityOfService:)]) {
-                    [mainThread setQualityOfService:NSQualityOfServiceUserInteractive];
-                }
+                pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
                 
                 // Set quyền tranh giành CPU tuyệt đối (1.0 là max)
-                [mainThread setThreadPriority:1.0];
+                [NSThread setThreadPriority:1.0];
             });
         }
     });
