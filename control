@@ -1,6 +1,6 @@
 Package: com.catyeco.universaloptimizer
 Name: Universal Optimizer
-Depends: mobilesubstrate
+Depends: mobilesubstrate | org.coolstar.libhooker | com.ex.substitute
 Version: 1.0.0
 Architecture: iphoneos-arm64
 Description: Mod Menu Toi Uu Hieu Nang Game Toan Dien
