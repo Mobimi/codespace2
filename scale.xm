@@ -21,8 +21,8 @@ void updateGlobalScale(CGFloat newScale) {
 }
 
 %hook UIScreen
-- (CGFloat)scale { return getGlobalScale(); }
-- (CGFloat)nativeScale { return getGlobalScale(); }
+- (CGFloat)scale { CGFloat s = getGlobalScale(); return s > 0.0 ? s : %orig; }
+- (CGFloat)nativeScale { CGFloat s = getGlobalScale(); return s > 0.0 ? s : %orig; }
 %end
 
 %hook UIWindow
