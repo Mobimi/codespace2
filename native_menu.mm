@@ -284,8 +284,8 @@ static CGFloat safeDefaultScale() {
     // Giữ trong bounds màn hình
     CGFloat halfW = self.floatingBtn.frame.size.width  / 2;
     CGFloat halfH = self.floatingBtn.frame.size.height / 2;
-    newCenter.x = MAX(halfW, MIN(self.frame.size.width  - halfW, newCenter.x));
-    newCenter.y = MAX(halfH, MIN(self.frame.size.height - halfH, newCenter.y));
+    newCenter.x = MAX(halfW, MIN(self.bounds.size.width  - halfW, newCenter.x));
+    newCenter.y = MAX(halfH, MIN(self.bounds.size.height - halfH, newCenter.y));
     self.floatingBtn.center = newCenter;
     [r setTranslation:CGPointZero inView:self];
 }
