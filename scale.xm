@@ -8,7 +8,7 @@ static CGFloat getGlobalScale() {
     if (cachedScale == -1.0) {
         float saved = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"]
                        floatForKey:@"GO_Scale"];
-        cachedScale = (saved > 0.1) ? (CGFloat)saved : [UIScreen mainScreen].scale;
+        cachedScale = (saved > 0.1) ? (CGFloat)saved : 0.0;
     }
     return cachedScale;
 }
