@@ -3,7 +3,7 @@
 %hook NSProcessInfo
 - (NSProcessInfoThermalState)thermalState {
     // Mở két sắt xem công tắc Anti-Throttling có bật không
-    BOOL isEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"GO_ThermalBypass"];
+    BOOL isEnabled = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:@"GO_ThermalBypass"];
     
     if (isEnabled) {
         // Nếu BẬT: Báo cáo với iOS là nhiệt độ máy đang ở trạng thái "Nominal" (Lý tưởng/Bình thường)
