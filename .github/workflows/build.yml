@@ -1,32 +1,38 @@
-name: Build GameOptimizer (Dylib)
+name: Build UniversalOptimizer (Dylib)
 
-# Kích hoạt khi có code mới hoặc tự bấm nút chạy
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: macos-latest
 
     steps:
-      - name: 1. Lay ma nguon cua Phap Su
+      - name: 1. Lay ma nguon
         uses: actions/checkout@v4
 
-      - name: 2. Cai dat lo duc Theos & Cong cu ky ten (ldid)
+      - name: 2. Clone ImGui
+        run: |
+          git clone https://github.com/ocornut/imgui.git imgui
+
+      - name: 3. Cai dat Theos va ldid
         run: |
           brew install ldid
           git clone --recursive https://github.com/theos/theos.git ~/theos
           rm -rf ~/theos/sdks
           git clone https://github.com/theos/sdks.git ~/theos/sdks
-          echo "THEOS=~/theos" >> $GITHUB_ENV
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
 
-      - name: 3. Tien hanh ep Dylib va dong goi
+      - name: 4. Build
         run: |
-          make package FINALPACKAGE=1
+          make package FINALPACKAGE=1 \
+            CFLAGS="-fobjc-arc -Wno-deprecated-declarations -Wno-error -Iimgui -Iimgui/backends" \
+            CXXFLAGS="-std=c++17 -fno-exceptions -Iimgui -Iimgui/backends" \
+            LDFLAGS="-framework Metal -framework MetalKit -framework QuartzCore -framework UIKit -framework Foundation"
 
-      - name: 4. Tra hang cho Phap Su
+      - name: 5. Tra hang
         uses: actions/upload-artifact@v4
         with:
           name: UniversalOptimizer_Tweak
