@@ -28,7 +28,9 @@ static CGFloat safeDefaultScale() {
 
 @implementation GOMenuViewController
 - (BOOL)shouldAutorotate { return YES; }
-- (UIInterfaceOrientationMask)supportedInterfaceOrientations { return UIInterfaceOrientationMaskAll; }
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    return [UIApplication sharedApplication].keyWindow.rootViewController.supportedInterfaceOrientations;
+}
 - (BOOL)prefersStatusBarHidden { return YES; }
 @end
 
