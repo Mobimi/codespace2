@@ -2,6 +2,7 @@
 #import <sys/socket.h>
 #import <netinet/in.h>
 #import <netinet/tcp.h>
+#import <dlfcn.h>
 #import <substrate.h>
 
 // ═══════════════════════════════════════════════
@@ -32,11 +33,9 @@ static BOOL pingOptEnabled() {
 static int (*orig_connect)(int, const struct sockaddr *, socklen_t);
 static int replaced_connect(int fd, const struct sockaddr *addr, socklen_t len) {
     if (pingOptEnabled()) {
-        // DSCP EF — ưu tiên cao nhất, router xử lý trước
         int tos = 0xB8;
         setsockopt(fd, IPPROTO_IP, IP_TOS, &tos, sizeof(tos));
 
-        // Tắt Nagle algorithm — gửi gói ngay, không gom lại
         int noDelay = 1;
         setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &noDelay, sizeof(noDelay));
     }
@@ -44,7 +43,12 @@ static int replaced_connect(int fd, const struct sockaddr *addr, socklen_t len) 
 }
 
 %ctor {
-    MSHookFunction((void *)connect,
-                   (void *)replaced_connect,
-                   (void **)&orig_connect);
+    // Dùng dlsym để lấy địa chỉ thật của connect
+    // Tránh crash khi symbol chưa được bind lúc dylib load
+    void *sym = dlsym(RTLD_DEFAULT, "connect");
+    if (sym) {
+        MSHookFunction(sym,
+                       (void *)replaced_connect,
+                       (void **)&orig_connect);
+    }
 }
