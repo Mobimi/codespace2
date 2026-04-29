@@ -148,6 +148,7 @@ static CGFloat safeDefaultScale() {
 
 - (void)populateMenu {
     NSArray *features = @[
+        @{@"name": @"🎯  Disable MSAA",        @"key": @"GO_MSAADisable"},
         @{@"name": @"📶  Ping Optimize",       @"key": @"GO_PingOpt"},
         @{@"name": @"⚡  CPU Priority Boost",  @"key": @"GO_CPUPriority"},
         @{@"name": @"🎯  Input Lag Reduce",    @"key": @"GO_InputLag"},
