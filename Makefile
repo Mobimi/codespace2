@@ -28,5 +28,8 @@ UniversalOptimizer_FRAMEWORKS = \
 	QuartzCore \
 	Foundation \
 	CoreGraphics
+	Metal \
+	MetalKit \
+	OpenGLES
 
 include $(THEOS_MAKE_PATH)/tweak.mk
