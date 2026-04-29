@@ -15,7 +15,8 @@ UniversalOptimizer_FILES = \
 	animation_killer.xm \
 	network_blocker.xm \
 	anti_blur.xm \
-	render_optimize.xm
+	render_optimize.xm \
+  ping_optimize.xm
 
 UniversalOptimizer_CFLAGS = \
 	-fobjc-arc \
