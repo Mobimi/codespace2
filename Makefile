@@ -27,7 +27,7 @@ UniversalOptimizer_FRAMEWORKS = \
 	UIKit \
 	QuartzCore \
 	Foundation \
-	CoreGraphics
+	CoreGraphics \
 	Metal \
 	MetalKit \
 	OpenGLES
