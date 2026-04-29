@@ -33,4 +33,6 @@ UniversalOptimizer_FRAMEWORKS = \
 	MetalKit \
 	OpenGLES
 
+UniversalOptimizer_LIBRARIES = substrate
+
 include $(THEOS_MAKE_PATH)/tweak.mk
