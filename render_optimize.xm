@@ -42,14 +42,6 @@ static BOOL renderOptEnabled() {
     return renderOptEnabled() ? YES : %orig;
 }
 
-// Đọc giá trị từ menu, mặc định 2 nếu chưa set
-- (NSUInteger)maximumDrawableCount {
-    if (!renderOptEnabled()) return %orig;
-    NSInteger val = [[[NSUserDefaults alloc] initWithSuiteName:GO_SUITE]
-                     integerForKey:@"GO_DrawableCount"];
-    return (val == 3) ? 3 : 2;
-}
-
 %end
 
 // ── OPENGL ES ────────────────────────────────
