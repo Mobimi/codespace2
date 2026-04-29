@@ -16,7 +16,6 @@ UniversalOptimizer_FILES = \
 	network_blocker.xm \
 	anti_blur.xm \
 	render_optimize.xm \
-	ping_optimize.xm \
 	disable_msaa.xm 
 
 UniversalOptimizer_CFLAGS = \
@@ -32,7 +31,5 @@ UniversalOptimizer_FRAMEWORKS = \
 	Metal \
 	MetalKit \
 	OpenGLES
-
-UniversalOptimizer_LIBRARIES = substrate
 
 include $(THEOS_MAKE_PATH)/tweak.mk
