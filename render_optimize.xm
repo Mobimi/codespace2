@@ -34,16 +34,20 @@ static BOOL renderOptEnabled() {
 // ── METAL LAYER ──────────────────────────────
 %hook CAMetalLayer
 
-// Tắt presents-with-transaction: GPU xuất frame async
-// thay vì đợi CPU → giảm stall, tăng throughput
 - (BOOL)presentsWithTransaction {
     return renderOptEnabled() ? NO : %orig;
 }
 
-// framebufferOnly = YES: GPU driver bỏ qua khả năng
-// đọc lại framebuffer → tiết kiệm bandwidth bộ nhớ
 - (BOOL)framebufferOnly {
     return renderOptEnabled() ? YES : %orig;
+}
+
+// Đọc giá trị từ menu, mặc định 2 nếu chưa set
+- (NSUInteger)maximumDrawableCount {
+    if (!renderOptEnabled()) return %orig;
+    NSInteger val = [[[NSUserDefaults alloc] initWithSuiteName:GO_SUITE]
+                     integerForKey:@"GO_DrawableCount"];
+    return (val == 3) ? 3 : 2;
 }
 
 %end
@@ -51,9 +55,6 @@ static BOOL renderOptEnabled() {
 // ── OPENGL ES ────────────────────────────────
 %hook EAGLContext
 
-// multiThreaded = YES: OpenGL ES chia công việc
-// giữa Application thread và GPU submit thread
-// → giảm blocking, tăng FPS trong game OpenGL
 - (void)setMultiThreaded:(BOOL)multiThreaded {
     %orig(renderOptEnabled() ? YES : multiThreaded);
 }
