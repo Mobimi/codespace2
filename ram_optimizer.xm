@@ -1,24 +1,60 @@
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
 
-%hook UIApplication
+// ═══════════════════════════════════════════════
+//   RAM OPTIMIZER v2 — Memory Warning Handler
+//   Dọn cache thật sự, không chặn game tự xử lý
+// ═══════════════════════════════════════════════
 
-// Hook hàm cảnh báo RAM số 1
-- (void)didReceiveMemoryWarning {
-    BOOL isEnabled = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:@"GO_RAMBypass"];
-    
-    // Nếu công tắc TẮT, cho phép iOS gửi cảnh báo bình thường
-    if (!isEnabled) {
-        %orig;
-    }
-    // Nếu BẬT, âm thầm bỏ qua (không gọi %orig), game sẽ không biết máy đang hết RAM
+#define GO_SUITE @"com.universal.optimizer"
+
+static BOOL isRamOptEnabled() {
+    static BOOL cached = NO;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        cached = [[[NSUserDefaults alloc] initWithSuiteName:GO_SUITE]
+                  boolForKey:@"GO_RAMBypass"];
+        [[NSNotificationCenter defaultCenter]
+            addObserverForName:NSUserDefaultsDidChangeNotification
+                        object:nil
+                         queue:[NSOperationQueue mainQueue]
+                    usingBlock:^(NSNotification *n) {
+            cached = [[[NSUserDefaults alloc] initWithSuiteName:GO_SUITE]
+                      boolForKey:@"GO_RAMBypass"];
+        }];
+    });
+    return cached;
 }
 
-// Hook hàm cảnh báo RAM số 2 (hàm ẩn của hệ thống)
+static void forceClearSystemCaches() {
+    // Xoá cache mạng — hiệu quả với game online
+    [[NSURLCache sharedURLCache] removeAllCachedResponses];
+
+    // Xoá image cache của UIKit
+    // iOS cache ảnh UI trong bộ nhớ, dọn giúp giải phóng đáng kể
+    [[NSURLCache sharedURLCache] setMemoryCapacity:0];
+    [[NSURLCache sharedURLCache] setDiskCapacity:0];
+}
+
+%hook UIApplication
+
+- (void)didReceiveMemoryWarning {
+    if (isRamOptEnabled()) {
+        // Dọn cache trước để giải phóng RAM nhanh
+        forceClearSystemCaches();
+        // Vẫn gọi %orig để game tự giải phóng texture, audio buffer của nó
+        %orig;
+    } else {
+        %orig;
+    }
+}
+
 - (void)_performMemoryWarning {
-    BOOL isEnabled = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:@"GO_RAMBypass"];
-    
-    if (!isEnabled) {
+    if (isRamOptEnabled()) {
+        forceClearSystemCaches();
+        // Tương tự — không chặn, để game engine tự xử lý phần của nó
+        %orig;
+    } else {
         %orig;
     }
 }
