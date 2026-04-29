@@ -154,6 +154,7 @@ static CGFloat safeDefaultScale() {
 
 - (void)populateMenu {
     NSArray *features = @[
+        @{@"name": @"📊  Perf HUD",            @"key": @"GO_PerfHUD"},
         @{@"name": @"⚡  CPU Priority Boost",  @"key": @"GO_CPUPriority"},
         @{@"name": @"🎯  Input Lag Reduce",    @"key": @"GO_InputLag"},
         @{@"name": @"💾  RAM Warn Bypass",     @"key": @"GO_RAMBypass"},
