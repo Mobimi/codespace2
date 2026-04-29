@@ -14,7 +14,8 @@ UniversalOptimizer_FILES = \
 	thermal_bypass.xm \
 	animation_killer.xm \
 	network_blocker.xm \
-	anti_blur.xm
+	anti_blur.xm \
+	performance_hud.xm
 
 UniversalOptimizer_CFLAGS = \
 	-fobjc-arc \
