@@ -1,10 +1,6 @@
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
-
-// ═══════════════════════════════════════════════
-//   RAM OPTIMIZER v2 — Memory Warning Handler
-//   Dọn cache thật sự, không chặn game tự xử lý
-// ═══════════════════════════════════════════════
+#import "device_detect.h"
 
 #define GO_SUITE @"com.universal.optimizer"
 
@@ -27,22 +23,19 @@ static BOOL isRamOptEnabled() {
 }
 
 static void forceClearSystemCaches() {
-    // Xoá cache mạng — hiệu quả với game online
     [[NSURLCache sharedURLCache] removeAllCachedResponses];
-
-    // Xoá image cache của UIKit
-    // iOS cache ảnh UI trong bộ nhớ, dọn giúp giải phóng đáng kể
-    [[NSURLCache sharedURLCache] setMemoryCapacity:0];
-    [[NSURLCache sharedURLCache] setDiskCapacity:0];
+    // Máy ít RAM (dưới 3GB) thì dọn mạnh hơn
+    if (deviceRAMGB() < 3.0) {
+        [[NSURLCache sharedURLCache] setMemoryCapacity:0];
+        [[NSURLCache sharedURLCache] setDiskCapacity:0];
+    }
 }
 
 %hook UIApplication
 
 - (void)didReceiveMemoryWarning {
     if (isRamOptEnabled()) {
-        // Dọn cache trước để giải phóng RAM nhanh
         forceClearSystemCaches();
-        // Vẫn gọi %orig để game tự giải phóng texture, audio buffer của nó
         %orig;
     } else {
         %orig;
@@ -52,7 +45,6 @@ static void forceClearSystemCaches() {
 - (void)_performMemoryWarning {
     if (isRamOptEnabled()) {
         forceClearSystemCaches();
-        // Tương tự — không chặn, để game engine tự xử lý phần của nó
         %orig;
     } else {
         %orig;
