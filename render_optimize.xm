@@ -4,12 +4,7 @@
 #import <MetalKit/MetalKit.h>
 #import <OpenGLES/EAGL.h>
 #import <Foundation/Foundation.h>
-
-// ═══════════════════════════════════════════════
-//   RENDER OPTIMIZER — Metal + OpenGL ES
-//   Tối ưu pipeline render, không đụng đến scale
-//   hay maximumDrawableCount (đã có file khác lo)
-// ═══════════════════════════════════════════════
+#import "device_detect.h"
 
 #define GO_SUITE @"com.universal.optimizer"
 
@@ -31,28 +26,30 @@ static BOOL renderOptEnabled() {
     return cached;
 }
 
-// ── METAL LAYER ──────────────────────────────
 %hook CAMetalLayer
 
 - (BOOL)presentsWithTransaction {
-    return renderOptEnabled() ? NO : %orig;
+    if (!renderOptEnabled()) return %orig;
+    return deviceSupportsMetal() ? NO : %orig;
 }
 
 - (BOOL)framebufferOnly {
-    return renderOptEnabled() ? YES : %orig;
+    if (!renderOptEnabled()) return %orig;
+    return deviceSupportsMetal() ? YES : %orig;
 }
 
 %end
 
-// ── OPENGL ES ────────────────────────────────
 %hook EAGLContext
 
 - (void)setMultiThreaded:(BOOL)multiThreaded {
-    %orig(renderOptEnabled() ? YES : multiThreaded);
+    if (!renderOptEnabled()) { %orig; return; }
+    %orig(deviceSupportsOpenGLES() ? YES : multiThreaded);
 }
 
 - (BOOL)multiThreaded {
-    return renderOptEnabled() ? YES : %orig;
+    if (!renderOptEnabled()) return %orig;
+    return deviceSupportsOpenGLES() ? YES : %orig;
 }
 
 %end
