@@ -176,14 +176,14 @@ static void startAutoClean(NSInteger thresholdMB) {
         @{@"icon": @"🎨", @"name": @"Graphics"},
         @{@"icon": @"⚡", @"name": @"CPU"},
         @{@"icon": @"💾", @"name": @"Memory"},
-        @{@"icon": @"📋", @"name": @"Info"},
         @{@"icon": @"🎮", @"name": @"Roblox"},
+        @{@"icon": @"📋", @"name": @"Info"},
 
     ];
     NSMutableArray *btns = [NSMutableArray array];
     for (NSInteger i = 0; i < tabs.count; i++) {
         UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-        btn.frame = CGRectMake(4, HEADER_H + 1 + (i * 58), SIDEBAR_W - 8, 54);
+        btn.frame = CGRectMake(4, HEADER_H + 1 + (i * 67), SIDEBAR_W - 8, 63);
         btn.backgroundColor    = (i == 0) ? CLR_SELECTED : [UIColor clearColor];
         btn.layer.cornerRadius = 8;
         btn.tag = i;
@@ -275,7 +275,7 @@ static void startAutoClean(NSInteger thresholdMB) {
         y = [self addSwitch:@"🛡  Chặn Telemetry"     key:@"GO_RobloxTelemetry" y:y width:W];
         y = [self addSwitch:@"🖼  Giảm Texture"        key:@"GO_RobloxLowTex"   y:y width:W];
 
-    } else if (tab == 3) { // ── INFO ──
+    } else if (tab == 4) { // ── INFO ──
         y = [self addSectionLabel:@"HƯỚNG DẪN" y:y width:W];
         NSArray *notes = @[
             @"🎨 Render Optimize: Tối ưu pipeline Metal/OpenGL. Tắt nếu game bị lỗi đồ hoạ.",
