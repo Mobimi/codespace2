@@ -16,7 +16,8 @@ UniversalOptimizer_FILES = \
 	network_blocker.xm \
 	anti_blur.xm \
 	render_optimize.xm \
-	disable_msaa.xm 
+	disable_msaa.xm \
+	roblox.xm
 
 UniversalOptimizer_CFLAGS = \
 	-fobjc-arc \
