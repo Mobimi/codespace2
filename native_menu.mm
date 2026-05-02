@@ -604,3 +604,4 @@ __attribute__((constructor)) static void go_init() {
             });
         }];
     }
+}
