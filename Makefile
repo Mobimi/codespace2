@@ -16,8 +16,7 @@ UniversalOptimizer_FILES = \
 	network_blocker.xm \
 	anti_blur.xm \
 	render_optimize.xm \
-	disable_msaa.xm \
-	ipad_ui.xm
+	disable_msaa.xm 
 
 UniversalOptimizer_CFLAGS = \
 	-fobjc-arc \
