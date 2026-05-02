@@ -526,7 +526,7 @@ static void startAutoClean(NSInteger thresholdMB) {
 - (void)autoCleanToggled:(UISwitch *)sender {
     [GO_PREFS setBool:sender.isOn forKey:@"GO_AutoClean"];
     if (sender.isOn) {
-        NSInteger thresh = [self.autoCleanInput.text integerValue];
+        NSInteger thresh = self.autoCleanInput ? [self.autoCleanInput.text integerValue] : 0;
         if (thresh <= 0) thresh = 150;
         [GO_PREFS setInteger:thresh forKey:@"GO_AutoCleanThreshold"];
         startAutoClean(thresh);
