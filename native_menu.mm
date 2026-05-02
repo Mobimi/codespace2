@@ -1,4 +1,5 @@
 #import <UIKit/UIKit.h>
+#import <mach/mach.h>
 
 // ═══════════════════════════════════════════════
 //   UNIVERSAL OPTIMIZER — NATIVE UI MENU v4.0
