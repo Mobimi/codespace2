@@ -150,6 +150,7 @@ static CGFloat safeDefaultScale() {
 
 - (void)populateMenu {
     NSArray *features = @[
+        @{@"name": @"📱  iPad UI",              @"key": @"GO_iPadUI"},
         @{@"name": @"🎯  Disable MSAA",        @"key": @"GO_MSAADisable"},
         @{@"name": @"⚡  CPU Priority Boost",  @"key": @"GO_CPUPriority"},
         @{@"name": @"🎯  Input Lag Reduce",    @"key": @"GO_InputLag"},
