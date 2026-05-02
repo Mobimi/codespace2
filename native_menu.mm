@@ -177,6 +177,8 @@ static void startAutoClean(NSInteger thresholdMB) {
         @{@"icon": @"⚡", @"name": @"CPU"},
         @{@"icon": @"💾", @"name": @"Memory"},
         @{@"icon": @"📋", @"name": @"Info"},
+        @{@"icon": @"🎮", @"name": @"Roblox"},
+
     ];
     NSMutableArray *btns = [NSMutableArray array];
     for (NSInteger i = 0; i < tabs.count; i++) {
@@ -267,6 +269,12 @@ static void startAutoClean(NSInteger thresholdMB) {
         y = [self addSectionLabel:@"MANUAL CLEAN" y:y width:W];
         y = [self addCleanButtons:y width:W];
 
+    } else if (tab == 3) { // ── ROBLOX ──
+        y = [self addSectionLabel:@"ROBLOX OPTIMIZE" y:y width:W];
+        y = [self addSwitch:@"✨  Tắt Post-Processing" key:@"GO_RobloxPostFX"    y:y width:W];
+        y = [self addSwitch:@"🛡  Chặn Telemetry"     key:@"GO_RobloxTelemetry" y:y width:W];
+        y = [self addSwitch:@"🖼  Giảm Texture"        key:@"GO_RobloxLowTex"   y:y width:W];
+
     } else if (tab == 3) { // ── INFO ──
         y = [self addSectionLabel:@"HƯỚNG DẪN" y:y width:W];
         NSArray *notes = @[
@@ -286,7 +294,7 @@ static void startAutoClean(NSInteger thresholdMB) {
     }
 
     // Warning
-    if (tab != 3) {
+    if (tab != 4) {
         UILabel *warn = [[UILabel alloc] initWithFrame:CGRectMake(0, y + 6, W, 20)];
         warn.text          = @"⚠️ Khởi động lại game để áp dụng";
         warn.textColor     = [UIColor colorWithRed:1.0 green:0.8 blue:0.2 alpha:0.8];
