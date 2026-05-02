@@ -42,7 +42,7 @@ static BOOL robloxLowTexEnabled() {
                                                                     code:NSURLErrorCancelled
                                                                 userInfo:nil]);
                 }
-                return [super dataTaskWithRequest:request completionHandler:completionHandler];
+                return %orig(request, completionHandler);
             }
         }
     }
