@@ -1,12 +1,17 @@
 #import <UIKit/UIKit.h>
 
+// FIX: Gộp GO_RobloxPostFX vào đây thay vì hook UIVisualEffectView ở 2 chỗ
+// roblox.xm cũ cũng hook UIVisualEffectView → trùng lặp trên iOS 18
+
 %hook UIVisualEffectView
-// Hook vào class chuyên tạo hiệu ứng mờ của Apple
 - (void)setEffect:(UIVisualEffect *)effect {
-    BOOL isEnabled = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"] boolForKey:@"GO_AntiBlur"];
-    if (isEnabled) {
-        // Tắt lớp mờ (trả về nền trong suốt hoặc đen/trắng cơ bản) -> GPU không phải render nội suy nữa
-        %orig(nil); 
+    BOOL antiBlur   = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"]
+                       boolForKey:@"GO_AntiBlur"];
+    BOOL robloxPostFX = [[[NSUserDefaults alloc] initWithSuiteName:@"com.universal.optimizer"]
+                         boolForKey:@"GO_RobloxPostFX"];
+
+    if (antiBlur || robloxPostFX) {
+        %orig(nil);
     } else {
         %orig(effect);
     }
