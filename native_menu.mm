@@ -29,7 +29,9 @@ extern void updateGlobalScale(CGFloat newScale);
 
 static CGFloat safeDefaultScale() {
     float saved = [GO_PREFS floatForKey:@"GO_Scale"];
-    return (saved > 0.1f) ? (CGFloat)saved : [UIScreen mainScreen].nativeScale;
+    // FIX: Validate range 0.5–3.0 thay vì > 0.1
+    // Tránh trường hợp lần đầu cài, saved = 0.0 → hiển thị "0.00" trong UI
+    return (saved >= 0.5f && saved <= 3.0f) ? (CGFloat)saved : [UIScreen mainScreen].nativeScale;
 }
 
 // ─── Auto Clean Timer ───────────────────────
