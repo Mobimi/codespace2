@@ -4,7 +4,8 @@
 // ═══════════════════════════════════════════════
 //   ROBLOX OPTIMIZER
 //   Tối ưu đặc thù cho Roblox engine
-//   Yêu cầu khởi động lại app để áp dụng
+//   FIX: Bỏ hook NSURLSession ở đây vì network_blocker.xm đã handle
+//   Duplicate hook cùng method trên iOS 18 → crash không có log rõ
 // ═══════════════════════════════════════════════
 
 #define GO_SUITE @"com.universal.optimizer"
@@ -13,49 +14,18 @@ static BOOL robloxPostFXEnabled() {
     return [[[NSUserDefaults alloc] initWithSuiteName:GO_SUITE]
             boolForKey:@"GO_RobloxPostFX"];
 }
-static BOOL robloxTelemetryEnabled() {
-    return [[[NSUserDefaults alloc] initWithSuiteName:GO_SUITE]
-            boolForKey:@"GO_RobloxTelemetry"];
-}
 static BOOL robloxLowTexEnabled() {
     return [[[NSUserDefaults alloc] initWithSuiteName:GO_SUITE]
             boolForKey:@"GO_RobloxLowTex"];
 }
 
-// ── Chặn telemetry ──
-%hook NSURLSession
-- (NSURLSessionDataTask *)dataTaskWithRequest:(NSURLRequest *)request
-                           completionHandler:(void (^)(NSData *, NSURLResponse *, NSError *))completionHandler {
-    if (robloxTelemetryEnabled() && request.URL) {
-        NSString *host = request.URL.host.lowercaseString;
-        NSArray *blocked = @[
-            @"ephemeralcounters.roblox.com",
-            @"ecsv2.roblox.com",
-            @"clientsettingscdn.roblox.com",
-            @"perf.roblox.com",
-            @"diagnostics.roblox.com",
-        ];
-        for (NSString *domain in blocked) {
-            if ([host hasSuffix:domain]) {
-                if (completionHandler) {
-                    completionHandler(nil, nil, [NSError errorWithDomain:NSURLErrorDomain
-                                                                    code:NSURLErrorCancelled
-                                                                userInfo:nil]);
-                }
-                return %orig(request, completionHandler);
-            }
-        }
-    }
-    return %orig;
-}
-%end
+// FIX: Telemetry Roblox giờ được xử lý qua network_blocker.xm
+// Thêm các domain Roblox vào blockedKeywords trong network_blocker.xm thay vì hook lại ở đây
 
 // ── Tắt post-processing / blur ──
-%hook UIVisualEffectView
-- (void)setEffect:(UIVisualEffect *)effect {
-    robloxPostFXEnabled() ? %orig(nil) : %orig;
-}
-%end
+// FIX: Không hook UIVisualEffectView ở đây vì anti_blur.xm đã hook rồi
+// Gộp logic: GO_RobloxPostFX || GO_AntiBlur đều tắt blur
+// → Xử lý trong anti_blur.xm (xem file đó)
 
 // ── Giảm texture quality ──
 %hook UIImage
@@ -64,10 +34,16 @@ static BOOL robloxLowTexEnabled() {
     if ([name hasPrefix:@"rbx"] || [name hasPrefix:@"roblox"] || [name hasPrefix:@"Roblox"]) {
         UIImage *img = %orig;
         if (!img) return nil;
-        UIGraphicsBeginImageContextWithOptions(img.size, NO, 1.0);
-        [img drawInRect:CGRectMake(0, 0, img.size.width, img.size.height)];
-        UIImage *lowRes = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
+        // FIX: scale:1.0 làm giảm resolution thực sự nhưng dùng
+        // UIGraphicsImageRendererFormat để tương thích iOS 15+
+        UIGraphicsImageRendererFormat *fmt = [UIGraphicsImageRendererFormat preferredFormat];
+        fmt.scale = 1.0;
+        fmt.opaque = NO;
+        UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc]
+                                             initWithSize:img.size format:fmt];
+        UIImage *lowRes = [renderer imageWithActions:^(UIGraphicsImageRendererContext *ctx) {
+            [img drawInRect:CGRectMake(0, 0, img.size.width, img.size.height)];
+        }];
         return lowRes ?: img;
     }
     return %orig;
